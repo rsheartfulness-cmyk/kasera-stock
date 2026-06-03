@@ -233,11 +233,10 @@ const firebaseConfig = {
   appId: "1:117646348596:web:07a7eaf7e1cdb32a0e5561"
 };
 
-/*  B) The very first super admin.
-    Put YOUR login email here (lowercase). The first time you sign in,
-    the app makes you super admin automatically. After that you add
-    everyone else from the "People" tab — you can change this later.    */
-const SUPERADMIN_EMAIL = "rsheartfulness@gmail.com";
+/*  B) First super admin(s). Any email in this list becomes super admin
+    automatically on first sign-in. Add or change people later in the
+    People tab.                                                         */
+const SUPERADMIN_EMAILS = ["ravi@kaseraindustries.in", "rsheartfulness@gmail.com"];
 
 /*  C) WhatsApp (optional, Phase 1 leaves it OFF).
     When we wire 11za, set ENABLED to true and put your sending URL.
@@ -371,7 +370,7 @@ async function resolvePerson(user){
   const q=await db.collection(C.people).where('email','==',email).limit(1).get();
   if(!q.empty){ const d=q.docs[0]; const p=d.data(); if(p.active===false) return null; return {id:d.id,...p,email}; }
   // bootstrap first super admin
-  if(email===SUPERADMIN_EMAIL.toLowerCase()){
+  if(SUPERADMIN_EMAILS.some(e=>e.toLowerCase().trim()===email)){
     const ref=await db.collection(C.people).add({ email, name:(user.displayName||email.split('@')[0]),
       role:'superadmin', whatsapp:'', active:true, createdAt:FieldValue.serverTimestamp() });
     const d=await ref.get(); return {id:ref.id,...d.data(),email};
