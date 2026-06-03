@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kasera Stock</title>
+
+<!-- ============================================================= -->
+<!--  KASERA STOCK  -  Inventory & Warehouse Management (Phase 1)  -->
+<!--  Single-file app. Edit on GitHub, Netlify auto-deploys.       -->
+<!-- ============================================================= -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase (compat SDK, loaded from CDN - no build step needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --ink:#1b2230; --muted:#6b7587;
+  --line:#e3e6ec; --line2:#eef0f4;
+  --accent:#d97706; --accent-dark:#b45309; --accent-soft:#fef3e2;
+  --good:#15803d; --good-soft:#e7f6ec;
+  --bad:#b91c1c; --bad-soft:#fbeaea;
+  --warn:#a16207; --warn-soft:#fdf6e3;
+  --slate:#243049;
+  --radius:14px; --shadow:0 1px 2px rgba(20,30,55,.06),0 6px 24px rgba(20,30,55,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  font-size:15px; line-height:1.45;
+}
+h1,h2,h3,.brand{font-family:'Bricolage Grotesque','IBM Plex Sans',sans-serif;}
+button{font-family:inherit}
+.hidden{display:none !important}
+
+/* ---------- Login ---------- */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(120% 120% at 0% 0%, #fff7ec 0%, var(--bg) 45%);}
+.login-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  box-shadow:var(--shadow);padding:30px 26px;width:100%;max-width:380px}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.logo .mark{width:44px;height:44px;border-radius:11px;background:var(--slate);
+  display:grid;place-items:center;color:#fff;font-weight:800;font-family:'Bricolage Grotesque';
+  font-size:20px;box-shadow:inset 0 0 0 3px var(--accent)}
+.logo .name{font-size:21px;font-weight:800;letter-spacing:-.3px}
+.logo .sub{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1.5px}
+.login-card h2{margin:20px 0 4px;font-size:19px}
+.login-card p.hint{margin:0 0 18px;color:var(--muted);font-size:13px}
+
+/* ---------- Shell ---------- */
+#app{min-height:100vh;display:flex;flex-direction:column}
+header.topbar{position:sticky;top:0;z-index:30;background:var(--slate);color:#fff;
+  display:flex;align-items:center;gap:14px;padding:11px 16px;box-shadow:0 2px 10px rgba(20,30,55,.18)}
+header .mark{width:32px;height:32px;border-radius:8px;background:#fff;color:var(--slate);
+  display:grid;place-items:center;font-weight:800;font-family:'Bricolage Grotesque';font-size:15px;
+  box-shadow:inset 0 0 0 2px var(--accent)}
+header .ttl{font-weight:800;font-size:17px;letter-spacing:-.2px}
+header .spacer{flex:1}
+header .who{text-align:right;line-height:1.15}
+header .who .nm{font-weight:700;font-size:13px}
+header .who .rl{font-size:11px;color:#b9c2d6;text-transform:uppercase;letter-spacing:1px}
+header .out{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:9px;
+  padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px}
+header .out:hover{background:rgba(255,255,255,.22)}
+
+nav.tabs{position:sticky;top:54px;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+  display:flex;gap:2px;padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav.tabs button{background:none;border:0;padding:14px 14px;font-weight:600;color:var(--muted);
+  cursor:pointer;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
+nav.tabs button.active{color:var(--accent-dark);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--ink)}
+
+main{flex:1;width:100%;max-width:1100px;margin:0 auto;padding:18px 16px 90px}
+.viewhead{display:flex;align-items:center;gap:12px;margin:4px 0 16px;flex-wrap:wrap}
+.viewhead h2{margin:0;font-size:22px;letter-spacing:-.4px}
+.viewhead .spacer{flex:1}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:10px;cursor:pointer;
+  font-weight:700;font-size:14px;padding:11px 16px;transition:.12s;line-height:1}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-dark)}
+.btn.dark{background:var(--slate);color:#fff}
+.btn.dark:hover{filter:brightness(1.1)}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.ghost:hover{background:var(--line2)}
+.btn.good{background:var(--good);color:#fff}
+.btn.bad{background:#fff;color:var(--bad);box-shadow:inset 0 0 0 1px #f1c2c2}
+.btn.bad:hover{background:var(--bad-soft)}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.block{width:100%;justify-content:center;padding:13px}
+
+/* ---------- Cards / tables ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden}
+.card + .card{margin-top:14px}
+.card .ch{padding:14px 16px;border-bottom:1px solid var(--line2);font-weight:700;display:flex;align-items:center;gap:10px}
+.card .cb{padding:6px 0}
+.row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line2)}
+.row:last-child{border-bottom:0}
+.row .grow{flex:1;min-width:0}
+.row .t1{font-weight:600}
+.row .t2{font-size:12.5px;color:var(--muted)}
+.muted{color:var(--muted)}
+.empty{padding:34px 16px;text-align:center;color:var(--muted)}
+.empty .big{font-size:30px;margin-bottom:6px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:15px 16px;box-shadow:var(--shadow)}
+.stat .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.stat .v{font-size:27px;font-weight:800;font-family:'Bricolage Grotesque';margin-top:3px;letter-spacing:-.5px}
+.stat.alert .v{color:var(--accent-dark)}
+
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line2);white-space:nowrap}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;
+  position:sticky;top:0;background:var(--panel)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:hover td{background:#fafbfc}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+  padding:4px 9px;border-radius:99px;letter-spacing:.2px}
+.pill.in{background:var(--good-soft);color:var(--good)}
+.pill.out{background:var(--bad-soft);color:var(--bad)}
+.pill.transfer{background:#e8eefb;color:#2b51b5}
+.pill.pending{background:var(--warn-soft);color:var(--warn)}
+.pill.approved{background:var(--good-soft);color:var(--good)}
+.pill.rejected{background:var(--bad-soft);color:var(--bad)}
+.pill.low{background:var(--accent-soft);color:var(--accent-dark)}
+.pill.role{background:#eef0f4;color:var(--slate)}
+
+/* ---------- Forms / modal ---------- */
+label.fl{display:block;font-size:13px;font-weight:600;margin:13px 0 5px;color:var(--slate)}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;
+  font-family:inherit;font-size:15px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{min-height:64px;resize:vertical}
+.field-err{color:var(--bad);font-size:12.5px;margin-top:8px;min-height:1em}
+
+.backdrop{position:fixed;inset:0;background:rgba(20,28,46,.45);z-index:50;display:flex;
+  align-items:flex-end;justify-content:center;padding:0}
+.modal{background:var(--panel);width:100%;max-width:460px;border-radius:18px 18px 0 0;
+  max-height:92vh;overflow:auto;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
+.modal .mh{display:flex;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:#fff;z-index:2}
+.modal .mh h3{margin:0;font-size:18px;flex:1}
+.modal .mh .x{background:var(--line2);border:0;width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:18px;color:var(--muted)}
+.modal .mb{padding:6px 18px 18px}
+.modal .mf{padding:14px 18px 20px;display:flex;gap:10px}
+.modal .mf .btn{flex:1;justify-content:center}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:80;
+  background:var(--slate);color:#fff;padding:12px 18px;border-radius:11px;font-weight:600;font-size:14px;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.bad{background:var(--bad)}
+#toast.good{background:var(--good)}
+
+.loader{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fullload{min-height:60vh;display:grid;place-items:center;color:var(--muted)}
+.fullload .loader{border-color:var(--line);border-top-color:var(--accent);width:34px;height:34px}
+
+@media (min-width:640px){
+  .backdrop{align-items:center;padding:20px}
+  .modal{border-radius:18px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<section id="login">
+  <div class="login-card">
+    <div class="logo">
+      <div class="mark">KS</div>
+      <div><div class="name">Kasera Stock</div><div class="sub">Inventory &amp; Warehouse</div></div>
+    </div>
+    <h2>Sign in</h2>
+    <p class="hint">Use your Kasera email and password.</p>
+    <label class="fl" for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" placeholder="you@kaseraindustries.in" />
+    <label class="fl" for="pass">Password</label>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" />
+    <div class="field-err" id="loginErr"></div>
+    <button class="btn primary block" id="loginBtn" style="margin-top:6px">Sign in</button>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="mark">KS</div>
+    <div class="ttl">Kasera Stock</div>
+    <div class="spacer"></div>
+    <div class="who"><div class="nm" id="whoName">—</div><div class="rl" id="whoRole">—</div></div>
+    <button class="out" id="logoutBtn">Sign out</button>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toast"></div>
+
+<script>
+/* ===================================================================== */
+/*  1)  CONFIG  -  EDIT THESE TWO BLOCKS ONLY                            */
+/* ===================================================================== */
+
+/*  A) Firebase keys.
+    Copy the SAME firebaseConfig object that is already inside your
+    task app's index.html (rsheartfulness-cmyk/kasera-delegation).
+    Paste it between the braces below, replacing the placeholders.      */
+const firebaseConfig = {
+  apiKey: "AIzaSyA1dc3sNuyJo9BK5JguaevvY5nSQdsSvZk",
+  authDomain: "kasera-delegation.firebaseapp.com",
+  projectId: "kasera-delegation",
+  storageBucket: "kasera-delegation.firebasestorage.app",
+  messagingSenderId: "117646348596",
+  appId: "1:117646348596:web:07a7eaf7e1cdb32a0e5561"
+};
+
+/*  B) The very first super admin.
+    Put YOUR login email here (lowercase). The first time you sign in,
+    the app makes you super admin automatically. After that you add
+    everyone else from the "People" tab — you can change this later.    */
+const SUPERADMIN_EMAIL = "rsheartfulness@gmail.com";
+
+/*  C) WhatsApp (optional, Phase 1 leaves it OFF).
+    When we wire 11za, set ENABLED to true and put your sending URL.
+    Until then the app works fully and just skips WhatsApp.             */
+const WHATSAPP = {
+  ENABLED: false,
+  ENDPOINT: "",            // your 11za / Apps Script send URL
+};
+
+/* ===================================================================== */
+/*  2)  INIT                                                             */
+/* ===================================================================== */
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const FieldValue = firebase.firestore.FieldValue;
+
+// Collections (prefixed so they never clash with your task app's data)
+const C = {
+  people:    "inv_people",
+  items:     "inv_items",
+  warehouses:"inv_warehouses",
+  stock:     "inv_stock",      // doc id = itemId__warehouseId
+  movements: "inv_movements",
+  requests:  "inv_requests",
+  logs:      "inv_logs",
+};
+
+// in-memory state, kept live by listeners
+const S = {
+  me:null,            // {email,name,role,whatsapp,id}
+  people:[], items:[], warehouses:[], stock:{}, movements:[], requests:[], logs:[],
+  tab:"dashboard", listeners:[],
+};
+
+/* ===================================================================== */
+/*  3)  HELPERS                                                          */
+/* ===================================================================== */
+const $ = s => document.querySelector(s);
+const el = (h)=>{const d=document.createElement('div');d.innerHTML=h.trim();return d.firstElementChild;};
+const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtNum = n => (Number(n)||0).toLocaleString('en-IN');
+function fmtDate(ts){ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+
+let toastT;
+function toast(msg,kind){ const t=$('#toast'); t.textContent=msg; t.className=''+(kind||'');
+  t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
+
+// role helpers
+const RANK={employee:1,supervisor:2,admin:3,superadmin:4};
+const ROLE_LABEL={employee:'Employee',supervisor:'Supervisor',admin:'Admin',superadmin:'Super Admin'};
+function atLeast(role){ return S.me && RANK[S.me.role]>=RANK[role]; }
+const can = {
+  manageItems:()=>atLeast('admin'),
+  manageWarehouses:()=>atLeast('admin'),
+  managePeople:()=>atLeast('admin'),
+  backup:()=>atLeast('admin'),
+  approve:()=>atLeast('supervisor'),
+  directMove:()=>atLeast('supervisor'),   // do stock in/out/transfer directly
+  request:()=>true,                        // everyone can raise a request
+};
+
+function itemName(id){ const i=S.items.find(x=>x.id===id); return i?i.name:'(deleted item)'; }
+function itemUnit(id){ const i=S.items.find(x=>x.id===id); return i?i.unit:''; }
+function whName(id){ const w=S.warehouses.find(x=>x.id===id); return w?w.name:'(deleted)'; }
+const stockKey=(itemId,whId)=>itemId+'__'+whId;
+function stockQty(itemId,whId){ const s=S.stock[stockKey(itemId,whId)]; return s?Number(s.quantity)||0:0; }
+function itemTotal(itemId){ return S.warehouses.reduce((a,w)=>a+stockQty(itemId,w.id),0); }
+
+async function writeLog(action, detail){
+  try{ await db.collection(C.logs).add({ action, detail, byName:S.me.name, byEmail:S.me.email,
+    byRole:S.me.role, createdAt:FieldValue.serverTimestamp() }); }catch(e){ console.warn('log fail',e); }
+}
+
+// non-blocking WhatsApp send
+async function sendWhatsApp(number, message){
+  if(!WHATSAPP.ENABLED || !WHATSAPP.ENDPOINT || !number) return;
+  try{
+    await fetch(WHATSAPP.ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({number, message})});
+  }catch(e){ console.warn('whatsapp send failed',e); }
+}
+
+/* ===================================================================== */
+/*  4)  AUTH                                                             */
+/* ===================================================================== */
+$('#loginBtn').addEventListener('click', doLogin);
+$('#pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+$('#logoutBtn').addEventListener('click', ()=>auth.signOut());
+
+async function doLogin(){
+  const email=$('#email').value.trim(), pass=$('#pass').value;
+  $('#loginErr').textContent='';
+  if(!email||!pass){ $('#loginErr').textContent='Enter email and password.'; return; }
+  if(String(firebaseConfig.apiKey).indexOf('PASTE_FROM')===0){
+    $('#loginErr').textContent='Firebase keys not added yet — paste your firebaseConfig from the task app into the top of this file.'; return; }
+  const b=$('#loginBtn'); b.disabled=true; b.innerHTML='<span class="loader"></span>';
+  try{ await auth.signInWithEmailAndPassword(email,pass); }
+  catch(e){ $('#loginErr').textContent = friendlyAuthErr(e); }
+  finally{ b.disabled=false; b.textContent='Sign in'; }
+}
+function friendlyAuthErr(e){
+  const m=(e&&e.code)||(e&&e.message)||'';
+  if(m.includes('api-key')||m.includes('invalid-api-key')) return 'Firebase keys look wrong — re-check the firebaseConfig pasted at the top of the file.';
+  if(m.includes('wrong-password')||m.includes('invalid-credential')) return 'Wrong email or password.';
+  if(m.includes('user-not-found')) return 'No account with that email. Ask an admin to create your login.';
+  if(m.includes('too-many-requests')) return 'Too many tries. Wait a minute and try again.';
+  if(m.includes('invalid-email')) return 'That email does not look right.';
+  if(m.includes('network')) return 'Network problem — open the live Netlify site, not a downloaded file, and check internet.';
+  return 'Could not sign in. ('+(e.code||e.message||'unknown error')+')';
+}
+
+auth.onAuthStateChanged(async user=>{
+  detachListeners();
+  if(!user){ S.me=null; $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); return; }
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  $('#view').innerHTML='<div class="fullload"><span class="loader"></span></div>';
+  try{
+    S.me = await resolvePerson(user);
+  }catch(e){ console.error(e); }
+  if(!S.me){ renderNoAccess(user); return; }
+  $('#whoName').textContent=S.me.name||S.me.email;
+  $('#whoRole').textContent=ROLE_LABEL[S.me.role]||S.me.role;
+  attachListeners();
+  buildTabs(); go(S.tab);
+});
+
+async function resolvePerson(user){
+  const email=(user.email||'').toLowerCase();
+  const q=await db.collection(C.people).where('email','==',email).limit(1).get();
+  if(!q.empty){ const d=q.docs[0]; const p=d.data(); if(p.active===false) return null; return {id:d.id,...p,email}; }
+  // bootstrap first super admin
+  if(email===SUPERADMIN_EMAIL.toLowerCase()){
+    const ref=await db.collection(C.people).add({ email, name:(user.displayName||email.split('@')[0]),
+      role:'superadmin', whatsapp:'', active:true, createdAt:FieldValue.serverTimestamp() });
+    const d=await ref.get(); return {id:ref.id,...d.data(),email};
+  }
+  return null;
+}
+
+function renderNoAccess(user){
+  buildTabsEmpty();
+  $('#whoName').textContent=user.email; $('#whoRole').textContent='No access';
+  $('#view').innerHTML=`<div class="card"><div class="empty">
+    <div class="big">🔒</div>
+    <div class="t1" style="font-weight:700;margin-bottom:6px">No access yet</div>
+    <div>Your login works, but no role has been set for <b>${esc(user.email)}</b>.<br>
+    Ask a super admin to add you in the <b>People</b> tab.</div></div></div>`;
+}
+
+/* ===================================================================== */
+/*  5)  LIVE DATA LISTENERS                                              */
+/* ===================================================================== */
+function attachListeners(){
+  S.listeners.push(db.collection(C.people).orderBy('name').onSnapshot(s=>{
+    S.people=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['people']); }));
+  S.listeners.push(db.collection(C.items).orderBy('name').onSnapshot(s=>{
+    S.items=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['dashboard','stock','items','requests','move']); }));
+  S.listeners.push(db.collection(C.warehouses).orderBy('name').onSnapshot(s=>{
+    S.warehouses=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['dashboard','stock','warehouses','requests','move']); }));
+  S.listeners.push(db.collection(C.stock).onSnapshot(s=>{
+    S.stock={}; s.docs.forEach(d=>S.stock[d.id]=d.data()); refreshIfOn(['dashboard','stock']); }));
+  S.listeners.push(db.collection(C.requests).orderBy('createdAt','desc').limit(200).onSnapshot(s=>{
+    S.requests=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['dashboard','requests']); }));
+  S.listeners.push(db.collection(C.movements).orderBy('createdAt','desc').limit(200).onSnapshot(s=>{
+    S.movements=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['logs']); }));
+  S.listeners.push(db.collection(C.logs).orderBy('createdAt','desc').limit(200).onSnapshot(s=>{
+    S.logs=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['logs']); }));
+}
+function detachListeners(){ S.listeners.forEach(u=>{try{u()}catch(e){}}); S.listeners=[]; }
+function refreshIfOn(tabs){ if(tabs.includes(S.tab)) go(S.tab,true); }
+
+/* ===================================================================== */
+/*  6)  NAVIGATION                                                       */
+/* ===================================================================== */
+const TABS=[
+  {k:'dashboard',label:'Dashboard',show:()=>true},
+  {k:'stock',    label:'Stock',    show:()=>true},
+  {k:'requests', label:'Requests', show:()=>true},
+  {k:'items',    label:'Items',    show:()=>can.manageItems()},
+  {k:'warehouses',label:'Warehouses',show:()=>can.manageWarehouses()},
+  {k:'people',   label:'People',   show:()=>can.managePeople()},
+  {k:'logs',     label:'Logs',     show:()=>true},
+];
+function buildTabs(){
+  const n=$('#tabs'); n.innerHTML='';
+  TABS.filter(t=>t.show()).forEach(t=>{
+    const b=el(`<button data-k="${t.k}">${t.label}</button>`);
+    b.onclick=()=>go(t.k); n.appendChild(b);
+  });
+}
+function buildTabsEmpty(){ $('#tabs').innerHTML=''; }
+function go(tab,keepScroll){
+  S.tab=tab;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.k===tab));
+  const v=$('#view'); const y=keepScroll?window.scrollY:0;
+  ({dashboard:viewDashboard,stock:viewStock,requests:viewRequests,items:viewItems,
+    warehouses:viewWarehouses,people:viewPeople,logs:viewLogs}[tab]||viewDashboard)(v);
+  if(keepScroll) window.scrollTo(0,y); else window.scrollTo(0,0);
+}
+
+/* ===================================================================== */
+/*  7)  VIEWS                                                            */
+/* ===================================================================== */
+
+// ---------- Dashboard ----------
+function viewDashboard(v){
+  const totalItems=S.items.length, totalWh=S.warehouses.length;
+  const totalUnits=S.items.reduce((a,i)=>a+itemTotal(i.id),0);
+  const pending=S.requests.filter(r=>r.status==='pending').length;
+  const low=S.items.filter(i=> i.lowStock>0 && itemTotal(i.id)<=Number(i.lowStock));
+
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Dashboard</h2><div class="spacer"></div>
+    ${can.directMove()?'<button class="btn primary" id="qMove">+ Stock movement</button>':''}</div>`));
+
+  const grid=el(`<div class="stat-grid">
+    <div class="stat"><div class="k">Items</div><div class="v">${fmtNum(totalItems)}</div></div>
+    <div class="stat"><div class="k">Warehouses</div><div class="v">${fmtNum(totalWh)}</div></div>
+    <div class="stat"><div class="k">Total units in stock</div><div class="v">${fmtNum(totalUnits)}</div></div>
+    <div class="stat ${pending?'alert':''}"><div class="k">Pending requests</div><div class="v">${fmtNum(pending)}</div></div>
+  </div>`);
+  v.appendChild(grid);
+
+  // low stock
+  const lowCard=el(`<div class="card"><div class="ch">⚠️ Low stock ${low.length?`<span class="pill low">${low.length}</span>`:''}</div><div class="cb" id="lowBody"></div></div>`);
+  v.appendChild(lowCard);
+  const lb=lowCard.querySelector('#lowBody');
+  if(!low.length){ lb.innerHTML='<div class="empty">Nothing low. All items above their minimum. 👍</div>'; }
+  else low.forEach(i=>lb.appendChild(el(
+    `<div class="row"><div class="grow"><div class="t1">${esc(i.name)}</div>
+      <div class="t2">Minimum ${fmtNum(i.lowStock)} ${esc(i.unit||'')}</div></div>
+      <div style="text-align:right"><div class="t1" style="color:var(--accent-dark)">${fmtNum(itemTotal(i.id))} ${esc(i.unit||'')}</div>
+      <div class="t2">in stock</div></div></div>`)));
+
+  // recent requests
+  const rq=el(`<div class="card"><div class="ch">Recent requests</div><div class="cb" id="rqBody"></div></div>`);
+  v.appendChild(rq);
+  const rb=rq.querySelector('#rqBody');
+  const recent=S.requests.slice(0,6);
+  if(!recent.length){ rb.innerHTML='<div class="empty">No requests yet.</div>'; }
+  else recent.forEach(r=>rb.appendChild(reqRow(r,true)));
+
+  if(can.directMove()) v.querySelector('#qMove')?.addEventListener('click',()=>openMoveModal());
+}
+
+// ---------- Stock ----------
+function viewStock(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Stock</h2><div class="spacer"></div>
+    ${can.directMove()?'<button class="btn primary" id="mvBtn">+ Stock movement</button>':''}
+    <button class="btn ghost" id="reqBtn">Request</button></div>`));
+
+  if(!S.items.length || !S.warehouses.length){
+    v.appendChild(el(`<div class="card"><div class="empty"><div class="big">📦</div>
+      <div>Add at least one item and one warehouse to see stock.</div></div></div>`));
+  }else{
+    const search=el(`<input id="stkSearch" placeholder="Search item…" style="margin-bottom:12px;max-width:340px">`);
+    v.appendChild(search);
+    const card=el(`<div class="card"><div class="tablewrap"><table id="stkTable"></table></div></div>`);
+    v.appendChild(card);
+    renderStockTable($('#stkTable')||card.querySelector('table'),'');
+    search.addEventListener('input',()=>renderStockTable(card.querySelector('table'),search.value.toLowerCase()));
+  }
+  v.querySelector('#mvBtn')?.addEventListener('click',()=>openMoveModal());
+  v.querySelector('#reqBtn')?.addEventListener('click',()=>openRequestModal());
+}
+function renderStockTable(table,filter){
+  const whs=S.warehouses;
+  let h='<thead><tr><th>Item</th>';
+  whs.forEach(w=>h+=`<th class="num">${esc(w.name)}</th>`);
+  h+='<th class="num">Total</th></tr></thead><tbody>';
+  const items=S.items.filter(i=>i.name.toLowerCase().includes(filter));
+  if(!items.length) h+=`<tr><td colspan="${whs.length+2}"><div class="empty">No items match.</div></td></tr>`;
+  items.forEach(i=>{
+    const tot=itemTotal(i.id);
+    const lowFlag=i.lowStock>0 && tot<=Number(i.lowStock);
+    h+=`<tr><td><b>${esc(i.name)}</b> <span class="muted">${esc(i.unit||'')}</span>${lowFlag?' <span class="pill low">low</span>':''}</td>`;
+    whs.forEach(w=>{ const q=stockQty(i.id,w.id); h+=`<td class="num"${q?'':' class="num muted"'}>${q?fmtNum(q):'<span class="muted">0</span>'}</td>`; });
+    h+=`<td class="num"><b>${fmtNum(tot)}</b></td></tr>`;
+  });
+  h+='</tbody>';
+  table.innerHTML=h;
+}
+
+// ---------- Requests ----------
+function viewRequests(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Requests</h2><div class="spacer"></div>
+    <button class="btn primary" id="newReq">+ New request</button></div>`));
+
+  const pending=S.requests.filter(r=>r.status==='pending');
+  const others=S.requests.filter(r=>r.status!=='pending').slice(0,80);
+
+  const p=el(`<div class="card"><div class="ch">Pending ${pending.length?`<span class="pill pending">${pending.length}</span>`:''}</div><div class="cb" id="pb"></div></div>`);
+  v.appendChild(p);
+  const pb=p.querySelector('#pb');
+  if(!pending.length) pb.innerHTML='<div class="empty">No pending requests.</div>';
+  else pending.forEach(r=>pb.appendChild(reqRow(r,false)));
+
+  const o=el(`<div class="card"><div class="ch">History</div><div class="cb" id="ob"></div></div>`);
+  v.appendChild(o);
+  const ob=o.querySelector('#ob');
+  if(!others.length) ob.innerHTML='<div class="empty">Nothing yet.</div>';
+  else others.forEach(r=>ob.appendChild(reqRow(r,true)));
+
+  v.querySelector('#newReq').addEventListener('click',()=>openRequestModal());
+}
+function reqRow(r,readonly){
+  const dirPill=`<span class="pill ${r.type}">${r.type==='in'?'IN':'OUT'}</span>`;
+  const stPill=`<span class="pill ${r.status}">${r.status}</span>`;
+  const row=el(`<div class="row">
+    <div class="grow">
+      <div class="t1">${dirPill} ${fmtNum(r.quantity)} ${esc(itemUnit(r.itemId))} · ${esc(itemName(r.itemId))}</div>
+      <div class="t2">${esc(whName(r.warehouseId))} · by ${esc(r.requestedByName||'?')} · ${fmtDate(r.createdAt)}${r.note?' · '+esc(r.note):''}</div>
+      ${r.status!=='pending'?`<div class="t2">${stPill} ${r.decidedByName?'by '+esc(r.decidedByName):''}${r.decisionNote?' · '+esc(r.decisionNote):''}</div>`:''}
+    </div>
+    <div class="acts"></div>
+  </div>`);
+  const acts=row.querySelector('.acts');
+  if(!readonly && r.status==='pending' && can.approve()){
+    const ap=el('<button class="btn good sm">Approve</button>');
+    const rj=el('<button class="btn bad sm" style="margin-left:6px">Reject</button>');
+    ap.onclick=()=>decideRequest(r,true); rj.onclick=()=>decideRequest(r,false);
+    acts.append(ap,rj);
+  } else if(r.status==='pending'){ acts.innerHTML=`<span class="pill pending">pending</span>`; }
+  return row;
+}
+
+// ---------- Items ----------
+function viewItems(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Items</h2><div class="spacer"></div>
+    <button class="btn primary" id="addItem">+ Add item</button></div>`));
+  const card=el(`<div class="card"><div class="cb" id="ib"></div></div>`); v.appendChild(card);
+  const ib=card.querySelector('#ib');
+  if(!S.items.length) ib.innerHTML='<div class="empty"><div class="big">📦</div>No items yet. Add your first one.</div>';
+  S.items.forEach(i=>{
+    const row=el(`<div class="row"><div class="grow">
+      <div class="t1">${esc(i.name)}</div>
+      <div class="t2">${esc(i.unit||'unit')}${i.category?' · '+esc(i.category):''}${i.code?' · #'+esc(i.code):''}${i.lowStock>0?' · min '+fmtNum(i.lowStock):''} · ${fmtNum(itemTotal(i.id))} in stock</div>
+    </div><div class="acts"></div></div>`);
+    const e=el('<button class="btn ghost sm">Edit</button>');
+    const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
+    e.onclick=()=>openItemModal(i); d.onclick=()=>deleteItem(i);
+    row.querySelector('.acts').append(e,d);
+    ib.appendChild(row);
+  });
+  v.querySelector('#addItem').addEventListener('click',()=>openItemModal());
+}
+
+// ---------- Warehouses ----------
+function viewWarehouses(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Warehouses</h2><div class="spacer"></div>
+    <button class="btn primary" id="addWh">+ Add warehouse</button></div>`));
+  const card=el(`<div class="card"><div class="cb" id="wb"></div></div>`); v.appendChild(card);
+  const wb=card.querySelector('#wb');
+  if(!S.warehouses.length) wb.innerHTML='<div class="empty"><div class="big">🏭</div>No warehouses yet.</div>';
+  S.warehouses.forEach(w=>{
+    const units=S.items.reduce((a,i)=>a+stockQty(i.id,w.id),0);
+    const row=el(`<div class="row"><div class="grow">
+      <div class="t1">${esc(w.name)}</div>
+      <div class="t2">${w.location?esc(w.location)+' · ':''}${fmtNum(units)} units stored</div>
+    </div><div class="acts"></div></div>`);
+    const e=el('<button class="btn ghost sm">Edit</button>');
+    const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
+    e.onclick=()=>openWhModal(w); d.onclick=()=>deleteWh(w);
+    row.querySelector('.acts').append(e,d);
+    wb.appendChild(row);
+  });
+  v.querySelector('#addWh').addEventListener('click',()=>openWhModal());
+}
+
+// ---------- People ----------
+function viewPeople(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>People</h2><div class="spacer"></div>
+    ${can.backup()?'<button class="btn ghost" id="backupBtn">⬇ Backup</button>':''}
+    <button class="btn primary" id="addP">+ Add person</button></div>`));
+  v.appendChild(el(`<div class="card" style="background:var(--accent-soft);border-color:#f3d9a8">
+    <div class="row" style="border:0"><div class="grow t2">
+    Adding a person here gives them a role. Their <b>login</b> (email + password) is the same
+    Firebase account as the task app — create it in Firebase if they don't have one yet.</div></div></div>`));
+  const card=el(`<div class="card"><div class="cb" id="pb"></div></div>`); v.appendChild(card);
+  const pb=card.querySelector('#pb');
+  if(!S.people.length) pb.innerHTML='<div class="empty">No people yet.</div>';
+  S.people.forEach(p=>{
+    const isMe=p.email===S.me.email;
+    const row=el(`<div class="row"><div class="grow">
+      <div class="t1">${esc(p.name||p.email)} ${isMe?'<span class="muted">(you)</span>':''} <span class="pill role">${ROLE_LABEL[p.role]||p.role}</span> ${p.active===false?'<span class="pill rejected">disabled</span>':''}</div>
+      <div class="t2">${esc(p.email)}${p.whatsapp?' · 📱 '+esc(p.whatsapp):''}</div>
+    </div><div class="acts"></div></div>`);
+    const e=el('<button class="btn ghost sm">Edit</button>');
+    e.onclick=()=>openPersonModal(p);
+    row.querySelector('.acts').append(e);
+    if(!isMe){ const d=el('<button class="btn bad sm" style="margin-left:6px">Remove</button>');
+      d.onclick=()=>deletePerson(p); row.querySelector('.acts').append(d); }
+    pb.appendChild(row);
+  });
+  v.querySelector('#addP').addEventListener('click',()=>openPersonModal());
+  v.querySelector('#backupBtn')?.addEventListener('click',doBackup);
+}
+
+// ---------- Logs ----------
+function viewLogs(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Logs</h2></div>`));
+
+  const mv=el(`<div class="card"><div class="ch">Stock movements</div><div class="tablewrap"><table id="mvT"></table></div></div>`);
+  v.appendChild(mv);
+  let h='<thead><tr><th>When</th><th>Type</th><th>Item</th><th class="num">Qty</th><th>Warehouse</th><th>By</th><th>Note</th></tr></thead><tbody>';
+  if(!S.movements.length) h+='<tr><td colspan="7"><div class="empty">No movements yet.</div></td></tr>';
+  S.movements.forEach(m=>{
+    h+=`<tr><td>${fmtDate(m.createdAt)}</td><td><span class="pill ${m.type}">${m.type}</span></td>
+      <td>${esc(itemName(m.itemId))}</td><td class="num">${fmtNum(m.quantity)}</td>
+      <td>${esc(m.type==='transfer'?(whName(m.fromWarehouseId)+' → '+whName(m.toWarehouseId)):whName(m.warehouseId))}</td>
+      <td>${esc(m.byName||'')}</td><td>${esc(m.note||'')}</td></tr>`;
+  });
+  h+='</tbody>'; mv.querySelector('table').innerHTML=h;
+
+  const lg=el(`<div class="card"><div class="ch">Activity log</div><div class="cb" id="lb"></div></div>`);
+  v.appendChild(lg);
+  const lb=lg.querySelector('#lb');
+  if(!S.logs.length) lb.innerHTML='<div class="empty">No activity yet.</div>';
+  S.logs.forEach(l=>lb.appendChild(el(`<div class="row"><div class="grow">
+    <div class="t1">${esc(l.action)}</div>
+    <div class="t2">${esc(l.detail||'')} · ${esc(l.byName||'')} · ${fmtDate(l.createdAt)}</div></div></div>`)));
+}
+
+/* ===================================================================== */
+/*  8)  MODALS                                                           */
+/* ===================================================================== */
+function modal(title, bodyHTML, footerBtns){
+  closeModal();
+  const back=el(`<div class="backdrop"><div class="modal">
+    <div class="mh"><h3>${esc(title)}</h3><button class="x">×</button></div>
+    <div class="mb">${bodyHTML}</div>
+    <div class="mf"></div></div></div>`);
+  back.querySelector('.x').onclick=closeModal;
+  back.addEventListener('mousedown',e=>{ if(e.target===back) closeModal(); });
+  const mf=back.querySelector('.mf');
+  (footerBtns||[]).forEach(b=>{ const btn=el(`<button class="btn ${b.cls||'ghost'}">${esc(b.label)}</button>`);
+    btn.onclick=()=>b.onClick(btn); mf.appendChild(btn); });
+  $('#modalRoot').appendChild(back);
+  return back;
+}
+function closeModal(){ $('#modalRoot').innerHTML=''; }
+function busy(btn,on,label){ btn.disabled=on; if(on){ btn.dataset._t=btn.textContent; btn.innerHTML='<span class="loader"></span>'; }
+  else { btn.textContent=label||btn.dataset._t||'Save'; } }
+
+// --- Item modal ---
+function openItemModal(item){
+  const m=modal(item?'Edit item':'Add item',`
+    <label class="fl">Name *</label><input id="iName" value="${esc(item?.name||'')}" placeholder="e.g. M8 Bolt">
+    <label class="fl">Unit *</label><input id="iUnit" value="${esc(item?.unit||'')}" placeholder="pieces, kg, boxes, litres…">
+    <label class="fl">Category</label><input id="iCat" value="${esc(item?.category||'')}" placeholder="optional">
+    <label class="fl">Item code</label><input id="iCode" value="${esc(item?.code||'')}" placeholder="optional">
+    <label class="fl">Low-stock minimum</label><input id="iLow" type="number" min="0" value="${item?.lowStock||''}" placeholder="alert when total falls to this">
+    <div class="field-err" id="iErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:item?'Save':'Add',cls:'primary',onClick:async(btn)=>{
+        const name=$('#iName').value.trim(), unit=$('#iUnit').value.trim();
+        if(!name||!unit){ $('#iErr').textContent='Name and unit are required.'; return; }
+        busy(btn,true);
+        const data={name,unit,category:$('#iCat').value.trim(),code:$('#iCode').value.trim(),
+          lowStock:Number($('#iLow').value)||0};
+        try{
+          if(item){ await db.collection(C.items).doc(item.id).update(data); writeLog('Edited item',name); }
+          else { data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.items).add(data); writeLog('Added item',name); }
+          closeModal(); toast('Saved','good');
+        }catch(e){ busy(btn,false); $('#iErr').textContent='Could not save. '+(e.message||''); }
+     }}]);
+}
+async function deleteItem(i){
+  if(itemTotal(i.id)>0){ toast('Cannot delete — item still has stock','bad'); return; }
+  confirmModal('Delete item?',`Delete "${esc(i.name)}"? This cannot be undone.`,async(btn)=>{
+    busy(btn,true);
+    try{ await db.collection(C.items).doc(i.id).delete(); writeLog('Deleted item',i.name); closeModal(); toast('Deleted'); }
+    catch(e){ busy(btn,false); toast('Delete failed','bad'); }
+  });
+}
+
+// --- Warehouse modal ---
+function openWhModal(w){
+  modal(w?'Edit warehouse':'Add warehouse',`
+    <label class="fl">Name *</label><input id="wName" value="${esc(w?.name||'')}" placeholder="e.g. Main Store">
+    <label class="fl">Location</label><input id="wLoc" value="${esc(w?.location||'')}" placeholder="optional">
+    <div class="field-err" id="wErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:w?'Save':'Add',cls:'primary',onClick:async(btn)=>{
+        const name=$('#wName').value.trim();
+        if(!name){ $('#wErr').textContent='Name is required.'; return; }
+        busy(btn,true);
+        const data={name,location:$('#wLoc').value.trim()};
+        try{
+          if(w){ await db.collection(C.warehouses).doc(w.id).update(data); writeLog('Edited warehouse',name); }
+          else { data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.warehouses).add(data); writeLog('Added warehouse',name); }
+          closeModal(); toast('Saved','good');
+        }catch(e){ busy(btn,false); $('#wErr').textContent='Could not save.'; }
+     }}]);
+}
+async function deleteWh(w){
+  const units=S.items.reduce((a,i)=>a+stockQty(i.id,w.id),0);
+  if(units>0){ toast('Cannot delete — warehouse still holds stock','bad'); return; }
+  confirmModal('Delete warehouse?',`Delete "${esc(w.name)}"?`,async(btn)=>{
+    busy(btn,true);
+    try{ await db.collection(C.warehouses).doc(w.id).delete(); writeLog('Deleted warehouse',w.name); closeModal(); toast('Deleted'); }
+    catch(e){ busy(btn,false); toast('Delete failed','bad'); }
+  });
+}
+
+// --- Person modal ---
+function openPersonModal(p){
+  const roleOpts=Object.keys(ROLE_LABEL).map(r=>`<option value="${r}" ${p?.role===r?'selected':''}>${ROLE_LABEL[r]}</option>`).join('');
+  modal(p?'Edit person':'Add person',`
+    <label class="fl">Name *</label><input id="pName" value="${esc(p?.name||'')}">
+    <label class="fl">Email *</label><input id="pEmail" type="email" value="${esc(p?.email||'')}" ${p?'disabled style="background:#f0f1f4"':''} placeholder="must match their login email">
+    <label class="fl">Role *</label><select id="pRole">${roleOpts}</select>
+    <label class="fl">WhatsApp number</label><input id="pWa" value="${esc(p?.whatsapp||'')}" placeholder="e.g. 9198XXXXXXXX (with country code)">
+    <label class="fl">Active</label><select id="pAct"><option value="yes" ${p?.active!==false?'selected':''}>Yes — can sign in</option><option value="no" ${p?.active===false?'selected':''}>No — blocked</option></select>
+    <div class="field-err" id="pErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:p?'Save':'Add',cls:'primary',onClick:async(btn)=>{
+        const name=$('#pName').value.trim(), email=$('#pEmail').value.trim().toLowerCase(), role=$('#pRole').value;
+        if(!name||!email){ $('#pErr').textContent='Name and email are required.'; return; }
+        if(role==='superadmin' && S.me.role!=='superadmin'){ $('#pErr').textContent='Only a super admin can set the Super Admin role.'; return; }
+        busy(btn,true);
+        const data={name,email,role,whatsapp:$('#pWa').value.trim(),active:$('#pAct').value==='yes'};
+        try{
+          if(p){ await db.collection(C.people).doc(p.id).update(data); writeLog('Edited person',name); }
+          else {
+            const ex=await db.collection(C.people).where('email','==',email).limit(1).get();
+            if(!ex.empty){ busy(btn,false); $('#pErr').textContent='That email is already added.'; return; }
+            data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.people).add(data); writeLog('Added person',name+' ('+role+')');
+          }
+          closeModal(); toast('Saved','good');
+        }catch(e){ busy(btn,false); $('#pErr').textContent='Could not save.'; }
+     }}]);
+}
+async function deletePerson(p){
+  confirmModal('Remove person?',`Remove "${esc(p.name||p.email)}"? They will lose access (their login still exists).`,async(btn)=>{
+    busy(btn,true);
+    try{ await db.collection(C.people).doc(p.id).delete(); writeLog('Removed person',p.email); closeModal(); toast('Removed'); }
+    catch(e){ busy(btn,false); toast('Failed','bad'); }
+  });
+}
+
+// --- Stock movement modal (direct, supervisor+) ---
+function openMoveModal(){
+  if(!S.items.length||!S.warehouses.length){ toast('Add an item and a warehouse first','bad'); return; }
+  const itemOpts=S.items.map(i=>`<option value="${i.id}">${esc(i.name)} (${esc(i.unit||'unit')})</option>`).join('');
+  const whOpts=S.warehouses.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  modal('Stock movement',`
+    <label class="fl">Type *</label>
+    <select id="mType">
+      <option value="in">IN — receive into warehouse</option>
+      <option value="out">OUT — issue from warehouse</option>
+      <option value="transfer">TRANSFER — move between warehouses</option>
+    </select>
+    <label class="fl">Item *</label><select id="mItem">${itemOpts}</select>
+    <label class="fl" id="mWhL">Warehouse *</label><select id="mWh">${whOpts}</select>
+    <div id="mToWrap" class="hidden"><label class="fl">To warehouse *</label><select id="mTo">${whOpts}</select></div>
+    <label class="fl">Quantity *</label><input id="mQty" type="number" min="0" step="any" placeholder="0">
+    <label class="fl">Note</label><input id="mNote" placeholder="optional — supplier, bill no, reason">
+    <div class="field-err" id="mErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:'Record',cls:'primary',onClick:async(btn)=>{
+        const type=$('#mType').value, itemId=$('#mItem').value, whId=$('#mWh').value,
+              toId=$('#mTo').value, qty=Number($('#mQty').value), note=$('#mNote').value.trim();
+        if(!(qty>0)){ $('#mErr').textContent='Enter a quantity greater than 0.'; return; }
+        if(type==='transfer' && whId===toId){ $('#mErr').textContent='Choose two different warehouses.'; return; }
+        busy(btn,true);
+        try{ await doMovement({type,itemId,whId,toId,qty,note}); closeModal(); toast('Stock updated','good'); }
+        catch(e){ busy(btn,false); $('#mErr').textContent=e.message||'Could not update stock.'; }
+     }}]);
+  const typeSel=$('#mType');
+  typeSel.addEventListener('change',()=>{
+    const t=typeSel.value;
+    $('#mToWrap').classList.toggle('hidden',t!=='transfer');
+    $('#mWhL').textContent = t==='transfer'?'From warehouse *':'Warehouse *';
+  });
+}
+
+// core: apply a movement with a transaction so stock never goes wrong
+async function doMovement({type,itemId,whId,toId,qty,note,viaRequest}){
+  await db.runTransaction(async tx=>{
+    if(type==='in'){
+      const ref=db.collection(C.stock).doc(stockKey(itemId,whId));
+      const s=await tx.get(ref); const cur=s.exists?Number(s.data().quantity)||0:0;
+      tx.set(ref,{itemId,warehouseId:whId,quantity:cur+qty},{merge:true});
+    } else if(type==='out'){
+      const ref=db.collection(C.stock).doc(stockKey(itemId,whId));
+      const s=await tx.get(ref); const cur=s.exists?Number(s.data().quantity)||0:0;
+      if(qty>cur) throw new Error(`Only ${fmtNum(cur)} in ${whName(whId)}.`);
+      tx.set(ref,{itemId,warehouseId:whId,quantity:cur-qty},{merge:true});
+    } else { // transfer
+      const fromRef=db.collection(C.stock).doc(stockKey(itemId,whId));
+      const toRef=db.collection(C.stock).doc(stockKey(itemId,toId));
+      const fs=await tx.get(fromRef); const ts=await tx.get(toRef);
+      const fcur=fs.exists?Number(fs.data().quantity)||0:0;
+      const tcur=ts.exists?Number(ts.data().quantity)||0:0;
+      if(qty>fcur) throw new Error(`Only ${fmtNum(fcur)} in ${whName(whId)}.`);
+      tx.set(fromRef,{itemId,warehouseId:whId,quantity:fcur-qty},{merge:true});
+      tx.set(toRef,{itemId,warehouseId:toId,quantity:tcur+qty},{merge:true});
+    }
+  });
+  const mv={type,itemId,quantity:qty,note:note||'',byName:S.me.name,byEmail:S.me.email,
+    createdAt:FieldValue.serverTimestamp(), viaRequest:viaRequest||false};
+  if(type==='transfer'){ mv.fromWarehouseId=whId; mv.toWarehouseId=toId; } else { mv.warehouseId=whId; }
+  await db.collection(C.movements).add(mv);
+  writeLog('Stock '+type.toUpperCase(), `${fmtNum(qty)} ${itemUnit(itemId)} ${itemName(itemId)}`);
+}
+
+// --- Request modal (anyone) ---
+function openRequestModal(){
+  if(!S.items.length||!S.warehouses.length){ toast('Add an item and a warehouse first','bad'); return; }
+  const itemOpts=S.items.map(i=>`<option value="${i.id}">${esc(i.name)} (${esc(i.unit||'unit')})</option>`).join('');
+  const whOpts=S.warehouses.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  modal('New request',`
+    <label class="fl">I want to *</label>
+    <select id="rType"><option value="out">Take OUT of stock</option><option value="in">Add IN to stock</option></select>
+    <label class="fl">Item *</label><select id="rItem">${itemOpts}</select>
+    <label class="fl">Warehouse *</label><select id="rWh">${whOpts}</select>
+    <label class="fl">Quantity *</label><input id="rQty" type="number" min="0" step="any" placeholder="0">
+    <label class="fl">Reason / note</label><input id="rNote" placeholder="optional">
+    <div class="field-err" id="rErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:'Send request',cls:'primary',onClick:async(btn)=>{
+        const type=$('#rType').value,itemId=$('#rItem').value,whId=$('#rWh').value,
+              qty=Number($('#rQty').value),note=$('#rNote').value.trim();
+        if(!(qty>0)){ $('#rErr').textContent='Enter a quantity greater than 0.'; return; }
+        busy(btn,true);
+        try{
+          await db.collection(C.requests).add({type,itemId,warehouseId:whId,quantity:qty,note,
+            status:'pending',requestedByName:S.me.name,requestedByEmail:S.me.email,
+            createdAt:FieldValue.serverTimestamp()});
+          writeLog('Raised request', `${type.toUpperCase()} ${fmtNum(qty)} ${itemName(itemId)}`);
+          // notify approvers
+          const approvers=S.people.filter(p=>RANK[p.role]>=RANK.supervisor && p.whatsapp && p.active!==false);
+          approvers.forEach(a=>sendWhatsApp(a.whatsapp,
+            `New stock request: ${type.toUpperCase()} ${qty} ${itemName(itemId)} at ${whName(whId)} by ${S.me.name}. Please review in Kasera Stock.`));
+          closeModal(); toast('Request sent','good');
+        }catch(e){ busy(btn,false); $('#rErr').textContent='Could not send.'; }
+     }}]);
+}
+
+async function decideRequest(r,approve){
+  if(!approve){
+    confirmModal('Reject request?',`Reject this request from ${esc(r.requestedByName)}?`,async(btn)=>{
+      busy(btn,true);
+      try{
+        await db.collection(C.requests).doc(r.id).update({status:'rejected',
+          decidedByName:S.me.name,decidedByEmail:S.me.email,decidedAt:FieldValue.serverTimestamp()});
+        writeLog('Rejected request', `${itemName(r.itemId)} for ${r.requestedByName}`);
+        const reqP=S.people.find(p=>p.email===r.requestedByEmail);
+        if(reqP?.whatsapp) sendWhatsApp(reqP.whatsapp,`Your stock request (${itemName(r.itemId)}) was rejected by ${S.me.name}.`);
+        closeModal(); toast('Rejected');
+      }catch(e){ busy(btn,false); toast('Failed','bad'); }
+    },'Reject','bad');
+    return;
+  }
+  // approve = perform the movement, then mark approved
+  confirmModal('Approve request?',
+    `Approve and ${r.type==='in'?'add':'remove'} ${fmtNum(r.quantity)} ${esc(itemUnit(r.itemId))} of ${esc(itemName(r.itemId))} ${r.type==='in'?'to':'from'} ${esc(whName(r.warehouseId))}?`,
+    async(btn)=>{
+      busy(btn,true);
+      try{
+        await doMovement({type:r.type,itemId:r.itemId,whId:r.warehouseId,qty:r.quantity,
+          note:`Request by ${r.requestedByName}`,viaRequest:true});
+        await db.collection(C.requests).doc(r.id).update({status:'approved',
+          decidedByName:S.me.name,decidedByEmail:S.me.email,decidedAt:FieldValue.serverTimestamp()});
+        writeLog('Approved request', `${itemName(r.itemId)} for ${r.requestedByName}`);
+        const reqP=S.people.find(p=>p.email===r.requestedByEmail);
+        if(reqP?.whatsapp) sendWhatsApp(reqP.whatsapp,`Your stock request (${r.quantity} ${itemName(r.itemId)}) was approved by ${S.me.name}.`);
+        closeModal(); toast('Approved & stock updated','good');
+      }catch(e){ busy(btn,false); toast(e.message||'Could not approve','bad'); }
+    },'Approve','good');
+}
+
+// generic confirm modal
+function confirmModal(title,msg,onYes,yesLabel,yesCls){
+  modal(title,`<p style="margin:8px 0 4px">${msg}</p>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:yesLabel||'Yes',cls:yesCls||'primary',onClick:onYes}]);
+}
+
+/* ===================================================================== */
+/*  9)  BACKUP                                                           */
+/* ===================================================================== */
+async function doBackup(){
+  toast('Preparing backup…');
+  try{
+    const out={ exportedAt:new Date().toISOString(), exportedBy:S.me.email };
+    for(const [name,coll] of Object.entries(C)){
+      const snap=await db.collection(coll).get();
+      out[name]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    }
+    const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`kasera-stock-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+    writeLog('Downloaded backup','full export');
+    toast('Backup downloaded','good');
+  }catch(e){ console.error(e); toast('Backup failed','bad'); }
+}
+</script>
+</body>
+</html>
