@@ -406,6 +406,13 @@ const naturePill = n => n==='manufacturing'
   ? '<span class="pill mfg">Manufacturing</span>'
   : n==='trading' ? '<span class="pill trade">Trading</span>'
   : '<span class="pill role">Unclassified</span>';
+// Stock-alert status: out / low / healthy
+function stockStatus(item){ const t=itemTotal(item.id); const low=Number(item.lowStock)||0;
+  if(t<=0) return 'out'; if(low>0 && t<=low) return 'low'; return 'healthy'; }
+const statusPill = item => { const s=stockStatus(item);
+  return s==='out' ? '<span class="pill short">🔴 Out of stock</span>'
+       : s==='low' ? '<span class="pill low">🟠 Low</span>'
+       : '<span class="pill completed">🟢 Healthy</span>'; };
 function fmtDate(ts){ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts);
   return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
 
@@ -551,7 +558,10 @@ function renderNoAccess(user){
 /* ===================================================================== */
 function attachListeners(){
   S.listeners.push(db.collection(C.people).orderBy('name').onSnapshot(s=>{
-    S.people=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['people']); }));
+    S.people=s.docs.map(d=>({id:d.id,...d.data()}));
+    if(S.me){ const mine=S.people.find(p=>p.id===S.me.id || (p.email||'').toLowerCase()===(S.me.email||'').toLowerCase());
+      if(mine){ S.me.role=mine.role; S.me.access=mine.access; S.me.active=mine.active; buildTabs(); if(!navAllowed(S.tab)) go('dashboard'); } }
+    refreshIfOn(['people']); }));
   S.listeners.push(db.collection(C.items).orderBy('name').onSnapshot(s=>{
     S.items=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['dashboard','stock','items','requests','move']); }));
   S.listeners.push(db.collection(C.warehouses).orderBy('name').onSnapshot(s=>{
@@ -622,6 +632,8 @@ function navAllowed(key){
   if(!S.me) return true;
   if(S.me.role==='superadmin') return true;        // super admin always sees everything
   if(key==='dashboard') return true;               // never hide the home screen
+  // per-USER override takes priority over the role default
+  if(S.me.access && S.me.access[key]!==undefined) return S.me.access[key]!==false;
   const acc = S.config && S.config.access && S.config.access[S.me.role];
   if(!acc) return true;                            // no rule set → visible by default
   return acc[key]!==false;
@@ -697,6 +709,16 @@ function viewDashboard(v){
     v.appendChild(dc); const tb=dc.querySelector('#tdBody');
     toDeliver.slice(0,6).forEach(a=>tb.appendChild(allocRow(a)));
   }
+
+  const outN=S.items.filter(i=>stockStatus(i)==='out').length;
+  const lowN=S.items.filter(i=>stockStatus(i)==='low').length;
+  const okN=S.items.filter(i=>stockStatus(i)==='healthy').length;
+  v.appendChild(el(`<div class="card"><div class="ch">Stock health</div>
+    <div class="cb" style="padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap">
+      <span class="pill short" style="font-size:13px">🔴 Out of stock: ${fmtNum(outN)}</span>
+      <span class="pill low" style="font-size:13px">🟠 Low: ${fmtNum(lowN)}</span>
+      <span class="pill completed" style="font-size:13px">🟢 Healthy: ${fmtNum(okN)}</span>
+    </div></div>`));
 
   const lowCard=el(`<div class="card"><div class="ch">Low stock ${low.length?`<span class="pill low">${low.length}</span>`:''}</div><div class="cb" id="lowBody"></div></div>`);
   v.appendChild(lowCard);
@@ -834,7 +856,7 @@ function viewItems(v){
       if(i.salesPrice) bits.push('₹'+fmtNum(i.salesPrice));
       const row=el(`<div class="row">
         <div class="grow" style="cursor:pointer">
-          <div class="t1">${esc(i.name)} ${naturePill(i.nature)}${low?' <span class="pill low">low</span>':''}</div>
+          <div class="t1">${esc(i.name)} ${naturePill(i.nature)} ${statusPill(i)}</div>
           <div class="t2">${bits.join(' · ')} · ${fmtNum(tot)} in stock</div>
         </div><div class="acts"></div></div>`);
       row.querySelector('.grow').onclick=()=>openProductDetail(i);
@@ -1007,6 +1029,14 @@ function openItemModal(item){
     </div>
 
     <div class="fsec">Identification <span style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">— optional</span></div>
+    <div class="fg2">
+      <div><label class="fl">SKU code</label><input id="iSku" value="${esc(item?.sku||'')}" placeholder="e.g. DF-300L"></div>
+      <div><label class="fl">Category</label><input id="iCat" value="${esc(item?.category||'')}" placeholder="e.g. Deep Freezer"></div>
+    </div>
+    <div class="fg2">
+      <div><label class="fl">Brand</label><input id="iBrand" value="${esc(item?.brand||'')}"></div>
+      <div><label class="fl">Supplier</label><input id="iSupplier" value="${esc(item?.supplier||'')}"></div>
+    </div>
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label class="fl">HSN code</label><input id="iHsn" value="${esc(item?.hsn||'')}"></div>
       <div style="flex:1"><label class="fl">Barcode</label><input id="iBar" value="${esc(item?.barcode||'')}" placeholder="scan/print coming next stage"></div>
@@ -1035,6 +1065,7 @@ function openItemModal(item){
         busy(btn,true);
         const num=id=>{const x=Number($(id).value);return isNaN(x)?0:x;};
         const data={name,unit,nature,type:$('#iType').value.trim(),
+          sku:$('#iSku').value.trim(),category:$('#iCat').value.trim(),brand:$('#iBrand').value.trim(),supplier:$('#iSupplier').value.trim(),
           salesPrice:num('#iSale'),purchasePrice:num('#iBuy'),
           tax:num('#iTax'),salesTax:num('#iStax'),gst:num('#iGst'),
           hsn:$('#iHsn').value.trim(),barcode:$('#iBar').value.trim(),
@@ -1064,8 +1095,11 @@ function openItemModal(item){
 function openProductDetail(i){
   const dr=(k,val)=> val? `<div><div class="dk">${k}</div><div class="dv">${val}</div></div>`:'';
   const detailsHTML=`<div class="detail-grid">
+    <div><div class="dk">Status</div><div class="dv">${statusPill(i)}</div></div>
     <div><div class="dk">Nature</div><div class="dv">${naturePill(i.nature)}</div></div>
     <div><div class="dk">Unit</div><div class="dv">${esc(i.unit||'—')}</div></div>
+    ${dr('SKU',esc(i.sku||''))}${dr('Category',esc(i.category||''))}
+    ${dr('Brand',esc(i.brand||''))}${dr('Supplier',esc(i.supplier||''))}
     ${dr('Sub-type',esc(i.type||''))}
     ${dr('Sales price',i.salesPrice?'₹'+fmtNum(i.salesPrice):'')}
     ${dr('Purchase price',i.purchasePrice?'₹'+fmtNum(i.purchasePrice):'')}
@@ -1085,7 +1119,8 @@ function openProductDetail(i){
     <div class="detail-tabs">
       <button data-d="details" class="active">Details</button>
       <button data-d="stock">Stock</button>
-      <button data-d="moves">Movement report</button>
+      <button data-d="ledger">Ledger</button>
+      <button data-d="moves">Movements</button>
     </div>
     <div id="dBody" style="padding-top:14px"></div>`,
     [{label:'Edit',cls:'ghost',onClick:()=>{closeModal();openItemModal(i);}},
@@ -1095,15 +1130,65 @@ function openProductDetail(i){
     back.querySelectorAll('.detail-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.d===d));
     if(d==='details') body.innerHTML=detailsHTML;
     else if(d==='stock') body.innerHTML=stockHTML;
+    else if(d==='ledger') body.innerHTML=ledgerHTML(i);
     else {
       const ms=S.movements.filter(m=>m.itemId===i.id);
       body.innerHTML = ms.length
-        ? `<div class="tablewrap"><table><thead><tr><th>When</th><th>Type</th><th class="num">Qty</th><th>Where</th><th>By</th></tr></thead><tbody>${ms.map(m=>`<tr><td>${fmtDate(m.createdAt)}</td><td><span class="pill ${m.type}">${m.type}</span></td><td class="num">${fmtNum(m.quantity)}</td><td>${esc(m.type==='transfer'?(whName(m.fromWarehouseId)+' → '+whName(m.toWarehouseId)):whName(m.warehouseId))}</td><td>${esc(m.byName||'')}</td></tr>`).join('')}</tbody></table></div>`
+        ? `<div class="tablewrap"><table><thead><tr><th>When</th><th>Reason</th><th class="num">Qty</th><th>Where</th><th>By</th></tr></thead><tbody>${ms.map(m=>{const inn=m.type!=='out'; return `<tr><td>${fmtDate(m.createdAt)}</td><td>${esc(reasonLabel(m.reason))} <span class="muted">(${m.type==='transfer'?'move':inn?'+':'−'})</span></td><td class="num">${fmtNum(m.quantity)}</td><td>${esc(m.type==='transfer'?(whName(m.fromWarehouseId)+' → '+whName(m.toWarehouseId)):whName(m.warehouseId))}</td><td>${esc(m.byName||'')}</td></tr>`;}).join('')}</tbody></table></div>`
         : '<div class="empty">No movements recorded for this product yet.</div>';
     }
   };
   renderD('details');
   back.querySelectorAll('.detail-tabs button').forEach(b=>b.onclick=()=>renderD(b.dataset.d));
+}
+// Stock Accuracy ledger: buckets every movement into the business formula
+function productLedger(itemId){
+  const b={opening:0,purchase:0,transfer_in:0,sales_return:0,production_in:0,adjust_in:0,other_in:0,
+           sale:0,transfer_out:0,damage:0,purchase_return:0,production_out:0,adjust_out:0,other_out:0};
+  S.movements.filter(m=>m.itemId===itemId).forEach(m=>{
+    const q=Number(m.quantity)||0, reason=m.reason||'';
+    if(m.type==='transfer'){ b.transfer_in+=q; b.transfer_out+=q; return; }
+    const isIn=m.type!=='out';
+    switch(reason){
+      case 'opening': b.opening+=q; break;
+      case 'purchase': b.purchase+=q; break;
+      case 'sales_return': b.sales_return+=q; break;
+      case 'sale': b.sale+=q; break;
+      case 'damage': b.damage+=q; break;
+      case 'purchase_return': b.purchase_return+=q; break;
+      case 'production': isIn?b.production_in+=q:b.production_out+=q; break;
+      case 'adjust_in': b.adjust_in+=q; break;
+      case 'adjust_out': b.adjust_out+=q; break;
+      default: isIn?b.other_in+=q:b.other_out+=q;
+    }
+  });
+  return b;
+}
+function ledgerHTML(i){
+  const b=productLedger(i.id);
+  const computed = b.opening+b.purchase+b.transfer_in+b.sales_return+b.production_in+b.adjust_in+b.other_in
+                 -(b.sale+b.transfer_out+b.damage+b.purchase_return+b.production_out+b.adjust_out+b.other_out);
+  const current=itemTotal(i.id);
+  const row=(label,val,sign)=> val? `<tr><td>${label}</td><td class="num" style="color:${sign>0?'var(--good)':'var(--bad)'}">${sign>0?'+':'−'}${fmtNum(val)}</td></tr>`:'';
+  const ok=Math.abs(computed-current)<0.001;
+  return `<div class="guide" style="margin-top:0">Every movement is bucketed by reason. The running total below should equal the current stock.</div>
+  <div class="tablewrap"><table><tbody>
+    ${row('Opening stock',b.opening,1)}
+    ${row('Purchases',b.purchase,1)}
+    ${row('Sales returns',b.sales_return,1)}
+    ${row('Produced (built)',b.production_in,1)}
+    ${row('Transfers in',b.transfer_in,1)}
+    ${row('Adjustments (add)',b.adjust_in+b.other_in,1)}
+    ${row('Sales / issued',b.sale,-1)}
+    ${row('Consumed in builds',b.production_out,-1)}
+    ${row('Damage / loss',b.damage,-1)}
+    ${row('Purchase returns',b.purchase_return,-1)}
+    ${row('Transfers out',b.transfer_out,-1)}
+    ${row('Adjustments (remove)',b.adjust_out+b.other_out,-1)}
+    <tr style="border-top:2px solid var(--line)"><td><b>Calculated stock</b></td><td class="num"><b>${fmtNum(computed)}</b></td></tr>
+    <tr><td><b>Current stock (live)</b></td><td class="num"><b>${fmtNum(current)} ${esc(i.unit||'')}</b></td></tr>
+    <tr><td>Match</td><td class="num">${ok?'<span class="pill completed">✓ reconciled</span>':'<span class="pill short">mismatch</span>'}</td></tr>
+  </tbody></table></div>`;
 }
 async function deleteItem(i){
   if(itemTotal(i.id)>0){ toast('Cannot delete — product still has stock','bad'); return; }
@@ -1181,6 +1266,14 @@ function openPersonModal(p){
     <label class="fl">Role *</label><select id="pRole">${roleOpts}</select>
     <label class="fl">WhatsApp number</label><input id="pWa" value="${esc(p?.whatsapp||'')}" placeholder="e.g. 9198XXXXXXXX (with country code)">
     <label class="fl">Active</label><select id="pAct"><option value="yes" ${p?.active!==false?'selected':''}>Yes — can sign in</option><option value="no" ${p?.active===false?'selected':''}>No — blocked</option></select>
+    ${S.me.role==='superadmin'?`
+    <div class="fsec">Access for this person <span style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">— overrides the role default</span></div>
+    <label class="fl" style="display:flex;align-items:center;gap:8px;margin-top:4px"><input type="checkbox" id="pCustom" ${p&&p.access?'checked':''} style="width:auto"> Set custom access just for this person</label>
+    <div id="pAccessBox" class="${p&&p.access?'':'hidden'}" style="margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px">
+      ${ACCESS_SECTIONS.map(s=>{ const on=(p&&p.access)?p.access[s.k]!==false:true;
+        return `<label class="fl" style="display:flex;align-items:center;gap:8px;margin:6px 0 0;font-weight:500"><input type="checkbox" class="pAcc" data-sec="${s.k}" ${on?'checked':''} style="width:auto"> ${s.label}</label>`;}).join('')}
+      <div class="t2" style="margin-top:8px">Dashboard is always visible. Admin-only sections (Products, Machines, Warehouses, People, Settings) stay restricted by role.</div>
+    </div>`:''}
     <div class="field-err" id="pErr"></div>`,
     [{label:'Cancel',onClick:closeModal},
      {label:p?'Save':'Add',cls:'primary',onClick:async(btn)=>{
@@ -1189,9 +1282,14 @@ function openPersonModal(p){
         if(role==='superadmin' && S.me.role!=='superadmin'){ $('#pErr').textContent='Only a super admin can set the Super Admin role.'; return; }
         busy(btn,true);
         const data={name,email,role,whatsapp:$('#pWa').value.trim(),active:$('#pAct').value==='yes'};
+        if(S.me.role==='superadmin'){
+          if($('#pCustom') && $('#pCustom').checked){ const map={}; document.querySelectorAll('.pAcc').forEach(cb=>map[cb.dataset.sec]=cb.checked); data.access=map; }
+          else if(p && p.access){ data.access=FieldValue.delete(); }
+        }
         try{
           if(p){ await db.collection(C.people).doc(p.id).update(data); writeLog('Edited person',name); }
           else {
+            delete data.access; if($('#pCustom') && $('#pCustom').checked){ const map={}; document.querySelectorAll('.pAcc').forEach(cb=>map[cb.dataset.sec]=cb.checked); data.access=map; }
             const ex=await db.collection(C.people).where('email','==',email).limit(1).get();
             if(!ex.empty){ busy(btn,false); $('#pErr').textContent='That email is already added.'; return; }
             data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.people).add(data); writeLog('Added person',name+' ('+role+')');
@@ -1199,6 +1297,7 @@ function openPersonModal(p){
           closeModal(); toast('Saved','good');
         }catch(e){ busy(btn,false); $('#pErr').textContent='Could not save.'; }
      }}]);
+  $('#pCustom')?.addEventListener('change',e=>{ $('#pAccessBox').classList.toggle('hidden',!e.target.checked); });
 }
 async function archivePerson(p,doArchive){
   try{ await db.collection(C.people).doc(p.id).update({active:!doArchive});
@@ -1222,11 +1321,9 @@ function openMoveModal(){
   const whOpts=S.warehouses.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
   const areaOpts=whId=>whAreas(whId).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
   modal('Stock movement',`
-    <label class="fl">Type *</label>
+    <label class="fl">Reason *</label>
     <select id="mType">
-      <option value="in">IN — receive into an area</option>
-      <option value="out">OUT — issue from an area</option>
-      <option value="transfer">TRANSFER — move between areas / warehouses</option>
+      ${MOVE_REASONS.map(r=>`<option value="${r.k}">${r.label}${r.dir==='in'?' (IN)':r.dir==='out'?' (OUT)':''}</option>`).join('')}
     </select>
     <label class="fl">Item *</label><select id="mItem">${itemOpts}</select>
     <div class="fg2">
@@ -1241,24 +1338,24 @@ function openMoveModal(){
     </div>
     <label class="fl">Quantity *</label><input id="mQty" type="number" min="0" step="any" placeholder="0">
     <div id="mAvail" class="t2" style="margin-top:-2px"></div>
-    <label class="fl">Note</label><input id="mNote" placeholder="optional — supplier, bill no, reason">
+    <label class="fl">Note</label><input id="mNote" placeholder="optional — supplier, bill no, reference">
     <div class="field-err" id="mErr"></div>`,
     [{label:'Cancel',onClick:closeModal},
      {label:'Record',cls:'primary',onClick:async(btn)=>{
-        const type=$('#mType').value, itemId=$('#mItem').value, whId=$('#mWh').value, areaId=$('#mArea').value,
+        const reason=$('#mType').value, type=reasonDir(reason), itemId=$('#mItem').value, whId=$('#mWh').value, areaId=$('#mArea').value,
               toId=$('#mTo').value, toAreaId=$('#mToArea').value, qty=Number($('#mQty').value), note=$('#mNote').value.trim();
         if(!(qty>0)){ $('#mErr').textContent='Enter a quantity greater than 0.'; return; }
         if(type==='transfer' && whId===toId && areaId===toAreaId){ $('#mErr').textContent='Choose a different area or warehouse to move to.'; return; }
         busy(btn,true);
-        try{ await doMovement({type,itemId,whId,areaId,toId,toAreaId,qty,note}); closeModal(); toast('Stock updated','good'); }
+        try{ await doMovement({type,reason,itemId,whId,areaId,toId,toAreaId,qty,note}); closeModal(); toast('Stock updated','good'); }
         catch(e){ busy(btn,false); $('#mErr').textContent=e.message||'Could not update stock.'; }
      }}]);
   const refreshAreas=(whSel,areaSel)=>{ const w=$(whSel).value; $(areaSel).innerHTML=areaOpts(w); };
-  const showAvail=()=>{ const t=$('#mType').value; if(t==='in'){ $('#mAvail').textContent=''; return; }
+  const showAvail=()=>{ const t=reasonDir($('#mType').value); if(t==='in'){ $('#mAvail').textContent=''; return; }
     const a=areaQty($('#mItem').value,$('#mWh').value,$('#mArea').value);
     $('#mAvail').innerHTML=`In this area now: <b>${fmtNum(a)}</b> ${esc(itemUnit($('#mItem').value))}`; };
   $('#mType').addEventListener('change',()=>{
-    const t=$('#mType').value;
+    const t=reasonDir($('#mType').value);
     $('#mToWrap').classList.toggle('hidden',t!=='transfer');
     $('#mWhL').textContent = t==='transfer'?'From warehouse *':'Warehouse *';
     $('#mAreaL').textContent = t==='transfer'?'From area *':'Area *';
@@ -1271,8 +1368,23 @@ function openMoveModal(){
   showAvail();
 }
 
+// ---- Stock Accuracy Engine: every movement carries a business reason ----
+const MOVE_REASONS=[
+  {k:'opening',        label:'Opening stock',        dir:'in'},
+  {k:'purchase',       label:'Purchase (received)',  dir:'in'},
+  {k:'sales_return',   label:'Sales return',         dir:'in'},
+  {k:'adjust_in',      label:'Adjustment — add',     dir:'in'},
+  {k:'sale',           label:'Sale / issue',         dir:'out'},
+  {k:'damage',         label:'Damage / Loss',        dir:'out'},
+  {k:'purchase_return',label:'Purchase return',      dir:'out'},
+  {k:'adjust_out',     label:'Adjustment — remove',  dir:'out'},
+  {k:'transfer',       label:'Transfer between areas',dir:'transfer'},
+];
+const reasonDir   = k => (MOVE_REASONS.find(r=>r.k===k)||{}).dir||'in';
+const reasonLabel = k => (MOVE_REASONS.find(r=>r.k===k)||{label:k||'—'}).label;
+
 // core: apply a movement with a transaction so stock never goes wrong
-async function doMovement({type,itemId,whId,areaId,toId,toAreaId,qty,note,viaRequest}){
+async function doMovement({type,itemId,whId,areaId,toId,toAreaId,qty,note,viaRequest,reason}){
   areaId=areaId||'main'; toAreaId=toAreaId||'main';
   await db.runTransaction(async tx=>{
     if(type==='in'){
@@ -1300,7 +1412,7 @@ async function doMovement({type,itemId,whId,areaId,toId,toAreaId,qty,note,viaReq
       if(legRef&&ls&&ls.exists) tx.delete(legRef);
     }
   });
-  const mv={type,itemId,quantity:qty,note:note||'',byName:S.me.name,byEmail:S.me.email,
+  const mv={type,reason:reason||(type==='transfer'?'transfer':type==='in'?'adjust_in':'adjust_out'),itemId,quantity:qty,note:note||'',byName:S.me.name,byEmail:S.me.email,
     createdAt:FieldValue.serverTimestamp(), viaRequest:viaRequest||false};
   if(type==='transfer'){ mv.fromWarehouseId=whId; mv.fromAreaId=areaId; mv.toWarehouseId=toId; mv.toAreaId=toAreaId; }
   else { mv.warehouseId=whId; mv.areaId=areaId; }
@@ -1437,7 +1549,7 @@ function openMachineDetail(m){
       <td class="num">${fmtNum(have)}</td><td class="num">${enough?'✓':`<span class="pill short">low</span>`}</td></tr>`; }).join('');
   const table=bom.length?`<div class="tablewrap"><table><thead><tr><th>Part</th><th class="num">Per machine</th><th class="num">In stock</th><th class="num"></th></tr></thead><tbody>${rows}</tbody></table></div>`
     :'<div class="muted" style="font-size:13px">No parts added yet.</div>';
-  const banner = bom.length? `<div class="guide" style="margin-bottom:12px">With the stock you have now, you can build <b>${fmtNum(can)}</b> of this machine.</div>`:'';
+  const banner = bom.length? `<div class="guide" style="margin-bottom:12px">With the stock you have now, you can build <b>${fmtNum(can)}</b> of this machine.${m.outputItemId?` Completing a build adds the finished <b>${esc(itemName(m.outputItemId))}</b> to stock.`:''}</div>`:'';
   modal(m.name+(m.code?' · #'+m.code:''), banner+table+'<div id="mdActs" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"></div>',
     [{label:'Edit',cls:'ghost',onClick:()=>openMachineModal(m)},{label:'Close',cls:'primary',onClick:closeModal}]);
   const acts=$('#mdActs');
@@ -1451,6 +1563,12 @@ function openMachineModal(m){
     <label class="fl">Machine name *</label><input id="mcName" value="${esc(m?.name||'')}" placeholder="e.g. Packing Machine MK2">
     <label class="fl">Code</label><input id="mcCode" value="${esc(m?.code||'')}" placeholder="optional">
     <label class="fl">Notes</label><input id="mcNotes" value="${esc(m?.notes||'')}" placeholder="optional">
+    <label class="fl">Finished product this build makes <span class="hint">added to stock when a build is completed</span></label>
+    <select id="mcOut">
+      <option value="">— none (build only consumes parts) —</option>
+      ${S.items.filter(i=>i.nature==='manufacturing').map(i=>`<option value="${i.id}" ${m?.outputItemId===i.id?'selected':''}>${esc(i.name)}</option>`).join('')}
+      ${S.items.filter(i=>i.nature!=='manufacturing').map(i=>`<option value="${i.id}" ${m?.outputItemId===i.id?'selected':''}>${esc(i.name)} — ${natureLabel(i.nature)}</option>`).join('')}
+    </select>
     <div class="subsec">Parts list (bill of materials)</div>
     <div class="guide" style="margin-bottom:10px">Add each product this machine needs and how many. When a build is approved, these are issued from stock automatically.</div>
     <div id="bomList"></div>
@@ -1461,7 +1579,7 @@ function openMachineModal(m){
        const name=$('#mcName').value.trim(); if(!name){ $('#mcErr').textContent='Name is required.'; return; }
        readBom(); const clean=bom.filter(r=>r.itemId&&Number(r.qty)>0);
        busy(btn,true);
-       const data={name,code:$('#mcCode').value.trim(),notes:$('#mcNotes').value.trim(),bom:clean};
+       const data={name,code:$('#mcCode').value.trim(),notes:$('#mcNotes').value.trim(),outputItemId:$('#mcOut').value||'',bom:clean};
        try{ if(m){ await db.collection(C.machines).doc(m.id).update(data); writeLog('Edited machine',name); }
          else{ data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.machines).add(data); writeLog('Added machine',name); }
          closeModal(); toast('Saved','good'); }
@@ -1559,7 +1677,7 @@ function openBuildModal(preMac){
        const m=S.machines.find(x=>x.id===$('#bMac').value); const qty=Math.max(1,Math.floor(Number($('#bQty').value)||1));
        if(!m){ $('#bErr').textContent='Pick a machine.'; return; }
        busy(btn,true);
-       try{ await db.collection(C.builds).add({machineId:m.id,machineName:m.name,bom:m.bom||[],qty,
+       try{ await db.collection(C.builds).add({machineId:m.id,machineName:m.name,bom:m.bom||[],outputItemId:m.outputItemId||'',qty,
          warehouseId:$('#bWh').value,note:$('#bNote').value.trim(),status:'requested',
          requestedByName:S.me.name,requestedByEmail:S.me.email,createdAt:FieldValue.serverTimestamp()});
          writeLog('Raised build request',m.name+' ×'+qty);
@@ -1676,7 +1794,7 @@ async function issueBuild(b){
   if(!needs.length) throw new Error('This machine has no parts list.');
   let result=[];
   await db.runTransaction(async tx=>{ result=await consumeItemsTx(tx,needs,b.warehouseId); });
-  for(const r of result){ if(r.issued>0){ await db.collection(C.movements).add({type:'out',itemId:r.itemId,warehouseId:b.warehouseId,quantity:r.issued,note:'Build: '+b.machineName,byName:S.me.name,byEmail:S.me.email,viaBuild:b.id,createdAt:FieldValue.serverTimestamp()}); } }
+  for(const r of result){ if(r.issued>0){ await db.collection(C.movements).add({type:'out',reason:'production',itemId:r.itemId,warehouseId:b.warehouseId,quantity:r.issued,note:'Build: '+b.machineName,byName:S.me.name,byEmail:S.me.email,viaBuild:b.id,createdAt:FieldValue.serverTimestamp()}); } }
   const shortages=result.some(r=>r.short>0);
   const clean=result.map(r=>({itemId:r.itemId,need:r.need,issued:r.issued,short:r.short}));
   await db.collection(C.builds).doc(b.id).update({status:'issued',issued:clean,shortages,issuedByName:S.me.name,issuedAt:FieldValue.serverTimestamp()});
@@ -1701,9 +1819,16 @@ function addSerialsModal(b){
     }}]);
 }
 function completeBuild(b){
-  confirmModal('Mark ready?',`Mark "${esc(b.machineName)}" ready and notify the accountant?`,async(btn)=>{ busy(btn,true);
+  const outName = b.outputItemId ? itemName(b.outputItemId) : '';
+  const extra = outName ? ` ${fmtNum(b.qty)} × ${esc(outName)} will be added to ${esc(whName(b.warehouseId))} stock.` : '';
+  confirmModal('Mark ready?',`Mark "${esc(b.machineName)}" ready and notify the accountant?${extra}`,async(btn)=>{ busy(btn,true);
     try{ await db.collection(C.builds).doc(b.id).update({status:'completed',completedByName:S.me.name,completedAt:FieldValue.serverTimestamp()});
-      writeLog('Build completed — accountant notified',b.machineName);
+      // Manufacturing loop: finished machine enters stock as a Manufacturing product
+      if(b.outputItemId){
+        try{ await doMovement({type:'in',reason:'production',itemId:b.outputItemId,whId:b.warehouseId,areaId:'main',qty:Number(b.qty)||1,note:'Built: '+b.machineName}); }
+        catch(e){ console.warn('finished-goods stock-in failed',e); }
+      }
+      writeLog('Build completed'+(outName?' — '+b.qty+' '+outName+' added to stock':''),b.machineName);
       S.people.filter(p=>RANK[p.role]>=RANK.admin&&p.whatsapp).forEach(p=>sendWhatsApp(p.whatsapp,`Machine ready: "${b.machineName}" ×${b.qty}. Serial: ${(b.serials&&b.serials.machine)||'—'}.`));
       closeModal(); toast('Marked ready','good'); }catch(e){ busy(btn,false); toast('Failed','bad'); }
   },'Mark ready','good');
@@ -1980,7 +2105,7 @@ async function deliverAllocation(a){
   if(!needs.length) throw new Error('No products in this allocation.');
   let result=[];
   await db.runTransaction(async tx=>{ result=await consumeItemsTx(tx,needs,a.warehouseId); });
-  for(const r of result){ if(r.issued>0){ await db.collection(C.movements).add({type:'out',itemId:r.itemId,warehouseId:a.warehouseId,quantity:r.issued,note:'Allocation: '+allocRecipient(a),byName:S.me.name,byEmail:S.me.email,viaAllocation:a.id,createdAt:FieldValue.serverTimestamp()}); } }
+  for(const r of result){ if(r.issued>0){ await db.collection(C.movements).add({type:'out',reason:'sale',itemId:r.itemId,warehouseId:a.warehouseId,quantity:r.issued,note:'Allocation: '+allocRecipient(a),byName:S.me.name,byEmail:S.me.email,viaAllocation:a.id,createdAt:FieldValue.serverTimestamp()}); } }
   const shortages=result.some(r=>r.short>0);
   const clean=result.map(r=>({itemId:r.itemId,qty:r.need,issued:r.issued,short:r.short}));
   await db.collection(C.allocations).doc(a.id).update({status:'delivered',delivered:clean,shortages,
@@ -2099,7 +2224,7 @@ function viewSettings(v){
   const accCard=el(`<div class="card">
     <div class="ch">Access — what each role can see</div>
     <div class="cb" style="padding:14px 16px">
-      <div class="guide" style="margin-top:0">Tick the sections each role may open. Super Admin always sees everything. Admin-only areas (Products, Machines, Warehouses, People, Settings) stay restricted by role and aren't listed here.</div>
+      <div class="guide" style="margin-top:0">Tick the sections each role may open. Super Admin always sees everything. Admin-only areas (Products, Machines, Warehouses, People, Settings) stay restricted by role and aren't listed here. <b>Need it per person?</b> Open <b>People → Edit</b> and set custom access for that individual — it overrides the role default.</div>
       <div class="tablewrap"><table><thead><tr><th>Section</th>${roles.map(r=>`<th class="num">${r[1]}</th>`).join('')}</tr></thead>
       <tbody>${ACCESS_SECTIONS.map(s=>`<tr><td>${s.label}</td>${roles.map(r=>{
         const on = !(acc[r[0]] && acc[r[0]][s.k]===false);
