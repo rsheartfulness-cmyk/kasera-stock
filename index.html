@@ -21,13 +21,13 @@
 
 <style>
 :root{
-  --bg:#f4f5f7; --panel:#ffffff; --ink:#1b2230; --muted:#6b7587;
-  --line:#e3e6ec; --line2:#eef0f4;
-  --accent:#d97706; --accent-dark:#b45309; --accent-soft:#fef3e2;
-  --good:#15803d; --good-soft:#e7f6ec;
-  --bad:#b91c1c; --bad-soft:#fbeaea;
-  --warn:#a16207; --warn-soft:#fdf6e3;
-  --slate:#243049;
+  --bg:#f4f6fb; --panel:#ffffff; --ink:#1a2236; --muted:#5a6480;
+  --line:#e6e9f0; --line2:#eef1f7;
+  --accent:#2563eb; --accent-dark:#1d4ed8; --accent-soft:#e8eefb;
+  --good:#16a34a; --good-soft:#e7f7ec;
+  --bad:#e11d48; --bad-soft:#fdeaee;
+  --warn:#ea9a0c; --warn-soft:#fdf4e3;
+  --slate:#1a2236;
   --radius:14px; --shadow:0 1px 2px rgba(20,30,55,.06),0 6px 24px rgba(20,30,55,.06);
 }
 *{box-sizing:border-box}
@@ -55,30 +55,90 @@ button{font-family:inherit}
 .login-card h2{margin:20px 0 4px;font-size:19px}
 .login-card p.hint{margin:0 0 18px;color:var(--muted);font-size:13px}
 
-/* ---------- Shell ---------- */
-#app{min-height:100vh;display:flex;flex-direction:column}
-header.topbar{position:sticky;top:0;z-index:30;background:var(--slate);color:#fff;
-  display:flex;align-items:center;gap:14px;padding:11px 16px;box-shadow:0 2px 10px rgba(20,30,55,.18)}
-header .mark{width:32px;height:32px;border-radius:8px;background:#fff;color:var(--slate);
-  display:grid;place-items:center;font-weight:800;font-family:'Bricolage Grotesque';font-size:15px;
-  box-shadow:inset 0 0 0 2px var(--accent)}
-header .ttl{font-weight:800;font-size:17px;letter-spacing:-.2px}
-header .spacer{flex:1}
-header .who{text-align:right;line-height:1.15}
-header .who .nm{font-weight:700;font-size:13px}
-header .who .rl{font-size:11px;color:#b9c2d6;text-transform:uppercase;letter-spacing:1px}
-header .out{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:9px;
-  padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px}
-header .out:hover{background:rgba(255,255,255,.22)}
-
-nav.tabs{position:sticky;top:54px;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
-  display:flex;gap:2px;padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-nav.tabs button{background:none;border:0;padding:14px 14px;font-weight:600;color:var(--muted);
-  cursor:pointer;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
-nav.tabs button.active{color:var(--accent-dark);border-bottom-color:var(--accent)}
-nav.tabs button:hover{color:var(--ink)}
-
-main{flex:1;width:100%;max-width:1100px;margin:0 auto;padding:18px 16px 90px}
+/* ---------- Shell: left sidebar ---------- */
+#app{min-height:100vh;display:flex;flex-direction:row}
+#side{width:236px;flex-shrink:0;background:#fff;color:var(--ink);position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;z-index:40;border-right:1px solid var(--line)}
+.side-brand{display:flex;align-items:center;gap:11px;padding:18px 16px 12px;border-bottom:1px solid var(--line)}
+.side-brand .mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3b82f6);color:#fff;
+  display:grid;place-items:center;font-weight:800;font-family:'Bricolage Grotesque';font-size:16px;box-shadow:0 2px 10px rgba(37,99,235,.3)}
+.side-brand .bn{font-weight:800;font-size:16px;letter-spacing:-.2px;line-height:1.1}
+.side-brand .bs{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-top:2px}
+#navList{flex:1;overflow-y:auto;padding:8px}
+#navList button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:var(--muted);
+  padding:11px 13px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;text-align:left;margin-bottom:2px}
+#navList button .ic{width:20px;text-align:center;font-size:15px}
+#navList button:hover{background:var(--bg);color:var(--ink)}
+#navList button.active{background:var(--accent-soft);color:var(--accent-dark);box-shadow:inset 0 0 0 1px rgba(37,99,235,.12)}
+.side-foot{padding:12px;border-top:1px solid var(--line)}
+.side-foot .nm{font-weight:700;font-size:13.5px}
+.side-foot .rl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:1px 0 9px}
+.side-foot .out{width:100%;background:var(--bg);color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:10px;font-weight:600;cursor:pointer;font-size:13px}
+.side-foot .out:hover{background:#eef1f7;color:var(--ink)}
+#sideScrim{display:none;position:fixed;inset:0;background:rgba(10,16,30,.5);z-index:38}
+#sideScrim.show{display:block}
+.content{flex:1;min-width:0;display:flex;flex-direction:column}
+.mtop{display:none;align-items:center;gap:12px;padding:10px 14px;background:#fff;color:var(--ink);position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line)}
+.mtop .menu{background:var(--accent-soft);border:0;color:var(--accent-dark);width:40px;height:40px;border-radius:10px;font-size:20px;cursor:pointer}
+.mtop .mtitle{font-weight:800;font-size:16px}
+main{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:20px 18px 90px}
+@media (max-width:900px){
+  #side{position:fixed;left:-260px;top:0;transition:left .22s ease}
+  #side.open{left:0;box-shadow:8px 0 40px rgba(0,0,0,.4)}
+  .mtop{display:flex}
+  main{padding:16px 14px 90px}
+}
+/* product detail + chips */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.detail-grid .dk{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.detail-grid .dv{font-weight:600;margin-top:1px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--line2);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;display:inline-flex;gap:7px;align-items:center}
+.chip .rm{cursor:pointer;color:var(--bad);font-weight:800}
+.subsec{font-weight:700;margin:16px 0 8px;font-size:12px;color:var(--slate);text-transform:uppercase;letter-spacing:.5px}
+.addline{display:flex;gap:8px;margin-top:8px}
+.addline input{flex:1}
+.detail-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line2)}
+.detail-tabs button{background:none;border:0;padding:10px 12px;font-weight:700;color:var(--muted);cursor:pointer;font-size:13.5px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.detail-tabs button.active{color:var(--accent-dark);border-bottom-color:var(--accent)}
+/* nav svg icons */
+#navList button .ic{display:inline-flex;align-items:center;justify-content:center}
+#navList button .ic svg{width:18px;height:18px}
+/* page guidance */
+.viewhead .sub{flex-basis:100%;color:var(--muted);font-size:13.5px;margin-top:-8px}
+.guide{background:var(--accent-soft);border:1px solid #cdd9f6;color:#1e3a8a;border-radius:12px;
+  padding:11px 14px;font-size:13.5px;margin-bottom:16px;line-height:1.5}
+.guide b{color:#5e3804}
+label.fl .hint{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+/* quick tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:15px;cursor:pointer;display:flex;gap:12px;align-items:center;transition:.12s}
+.tile:hover{border-color:var(--accent);transform:translateY(-1px)}
+.tile .ti{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent-dark);display:grid;place-items:center;flex-shrink:0}
+.tile .ti svg{width:20px;height:20px}
+.tile .tl{font-weight:700;font-size:14.5px}
+.tile .td{font-size:12px;color:var(--muted);margin-top:1px}
+/* workflow stepper */
+.stepper{position:relative;margin:6px 0 4px}
+.step{display:flex;gap:13px;position:relative;padding-bottom:16px}
+.step:not(:last-child)::before{content:'';position:absolute;left:12px;top:27px;bottom:-1px;width:2px;background:var(--line)}
+.step .dot{width:25px;height:25px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:800;font-size:12px;background:var(--line2);color:var(--muted);z-index:1}
+.step.done .dot{background:var(--good);color:#fff}
+.step.current .dot{background:var(--accent);color:#fff}
+.step .stt{font-weight:700;font-size:14px}
+.step.pending .stt{color:var(--muted)}
+.step .smeta{font-size:12.5px;color:var(--muted);margin-top:2px}
+.step .act{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap}
+/* BOM rows */
+.bomrow{display:flex;gap:8px;align-items:center;margin-bottom:7px}
+.bomrow select{flex:1}
+.bomrow input{width:84px;flex:0 0 auto}
+.bomrow .x{background:var(--line2);border:0;width:34px;height:38px;border-radius:9px;cursor:pointer;color:var(--bad);font-weight:800;flex:0 0 auto}
+.pill.issued{background:#e8eefb;color:#2b51b5}
+.pill.completed{background:var(--good-soft);color:var(--good)}
+.pill.short{background:var(--bad-soft);color:var(--bad)}
+.pill.approved2{background:var(--good-soft);color:var(--good)}
 .viewhead{display:flex;align-items:center;gap:12px;margin:4px 0 16px;flex-wrap:wrap}
 .viewhead h2{margin:0;font-size:22px;letter-spacing:-.4px}
 .viewhead .spacer{flex:1}
@@ -139,6 +199,8 @@ tr:hover td{background:#fafbfc}
 .pill.rejected{background:var(--bad-soft);color:var(--bad)}
 .pill.low{background:var(--accent-soft);color:var(--accent-dark)}
 .pill.role{background:#eef0f4;color:var(--slate)}
+.pill.mfg{background:#e8eefb;color:#2b51b5}
+.pill.trade{background:var(--good-soft);color:var(--good)}
 
 /* ---------- Forms / modal ---------- */
 label.fl{display:block;font-size:13px;font-weight:600;margin:13px 0 5px;color:var(--slate)}
@@ -177,6 +239,48 @@ textarea{min-height:64px;resize:vertical}
   .backdrop{align-items:center;padding:20px}
   .modal{border-radius:18px}
 }
+
+/* ============ v2 polish: richer, more "stock software" feel ============ */
+main{max-width:1120px}
+/* page title with accent bar */
+.viewhead h2{position:relative;padding-left:14px}
+.viewhead h2::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:5px;border-radius:3px;
+  background:linear-gradient(var(--accent),var(--accent-dark))}
+/* stat cards: accent stripe + icon, bigger number */
+.stat{position:relative;overflow:hidden;padding-left:18px;transition:.12s}
+.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line)}
+.stat.alert::before{background:var(--accent)}
+.stat .si{position:absolute;right:13px;top:13px;width:34px;height:34px;border-radius:9px;
+  background:var(--accent-soft);color:var(--accent-dark);display:grid;place-items:center}
+.stat .si svg{width:18px;height:18px}
+.stat .v{font-size:30px}
+.stat .cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px}
+.stat:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(20,30,55,.08),0 12px 30px rgba(20,30,55,.10)}
+/* tables: zebra + clearer hover, real-software look */
+tbody tr:nth-child(even) td{background:#fafbfd}
+tbody tr:hover td{background:var(--accent-soft) !important}
+th{background:#f7f8fa}
+/* card header: small accent dot */
+.card .ch::before{content:'';width:8px;height:8px;border-radius:3px;flex:0 0 auto;
+  background:linear-gradient(var(--accent),var(--accent-dark));display:inline-block}
+/* tiles: subtle top accent on hover */
+.tile{position:relative}
+.tile::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;border-radius:var(--radius) var(--radius) 0 0;
+  background:var(--accent);opacity:0;transition:.12s}
+.tile:hover::after{opacity:1}
+/* form sections + 2-column compact grid to shorten long forms */
+.fsec{font-weight:800;font-size:11px;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.8px;
+  margin:18px 0 2px;padding-top:14px;border-top:1px solid var(--line2)}
+.fsec:first-child{border-top:0;padding-top:0;margin-top:6px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.fg2 > label.fl{margin-top:11px}
+@media (max-width:520px){ .fg2{grid-template-columns:1fr} }
+/* segmented filter */
+.seg{display:inline-flex;background:#eef0f4;border-radius:11px;padding:4px;gap:3px;margin-bottom:14px;flex-wrap:wrap}
+.seg button{background:none;border:0;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13.5px;
+  color:var(--muted);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(20,30,55,.12)}
+.seg button:hover:not(.on){color:var(--ink)}
 </style>
 </head>
 <body>
@@ -201,15 +305,26 @@ textarea{min-height:64px;resize:vertical}
 
 <!-- ================= APP ================= -->
 <div id="app" class="hidden">
-  <header class="topbar">
-    <div class="mark">KS</div>
-    <div class="ttl">Kasera Stock</div>
-    <div class="spacer"></div>
-    <div class="who"><div class="nm" id="whoName">—</div><div class="rl" id="whoRole">—</div></div>
-    <button class="out" id="logoutBtn">Sign out</button>
-  </header>
-  <nav class="tabs" id="tabs"></nav>
-  <main id="view"></main>
+  <aside id="side">
+    <div class="side-brand">
+      <div class="mark">KS</div>
+      <div><div class="bn">Kasera Stock</div><div class="bs">Inventory &amp; Warehouse</div></div>
+    </div>
+    <nav id="navList"></nav>
+    <div class="side-foot">
+      <div class="nm" id="whoName">—</div>
+      <div class="rl" id="whoRole">—</div>
+      <button class="out" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+  <div id="sideScrim"></div>
+  <div class="content">
+    <header class="mtop">
+      <button id="menuBtn" class="menu">☰</button>
+      <div class="mtitle">Kasera Stock</div>
+    </header>
+    <main id="view"></main>
+  </div>
 </div>
 
 <div id="modalRoot"></div>
@@ -262,13 +377,19 @@ const C = {
   stock:     "inv_stock",      // doc id = itemId__warehouseId
   movements: "inv_movements",
   requests:  "inv_requests",
+  machines:  "inv_machines",   // machine templates with a parts list (BOM)
+  builds:    "inv_builds",     // machine build requests + their workflow
+  customers: "inv_customers",  // customer database
+  allocations:"inv_allocations",// allocate / deliver products to a recipient
+  config:    "inv_config",     // app settings (whatsapp url, company name)
   logs:      "inv_logs",
 };
 
 // in-memory state, kept live by listeners
 const S = {
   me:null,            // {email,name,role,whatsapp,id}
-  people:[], items:[], warehouses:[], stock:{}, movements:[], requests:[], logs:[],
+  people:[], items:[], warehouses:[], stock:{}, movements:[], requests:[],
+  machines:[], builds:[], customers:[], allocations:[], config:{}, logs:[],
   tab:"dashboard", listeners:[],
 };
 
@@ -279,6 +400,12 @@ const $ = s => document.querySelector(s);
 const el = (h)=>{const d=document.createElement('div');d.innerHTML=h.trim();return d.firstElementChild;};
 const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtNum = n => (Number(n)||0).toLocaleString('en-IN');
+const NATURE={manufacturing:{label:'Manufacturing',short:'Mfg'},trading:{label:'Trading',short:'Trading'}};
+const natureLabel = n => NATURE[n]? NATURE[n].label : 'Unclassified';
+const naturePill = n => n==='manufacturing'
+  ? '<span class="pill mfg">Manufacturing</span>'
+  : n==='trading' ? '<span class="pill trade">Trading</span>'
+  : '<span class="pill role">Unclassified</span>';
 function fmtDate(ts){ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts);
   return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
 
@@ -294,17 +421,42 @@ const can = {
   manageItems:()=>atLeast('admin'),
   manageWarehouses:()=>atLeast('admin'),
   managePeople:()=>atLeast('admin'),
-  backup:()=>atLeast('admin'),
+  backup:()=>atLeast('superadmin'),
   approve:()=>atLeast('supervisor'),
   directMove:()=>atLeast('supervisor'),   // do stock in/out/transfer directly
   request:()=>true,                        // everyone can raise a request
+  manageMachines:()=>atLeast('admin'),     // create/edit machine templates + BOM
+  reviewBuild:()=>atLeast('supervisor'),   // warehouse manager: review & send for approval
+  approveBuild:()=>atLeast('admin'),       // manager: approve / reject
+  issueBuild:()=>atLeast('supervisor'),    // warehouse manager: issue material
+  completeBuild:()=>atLeast('supervisor'), // mark ready / notify accountant
+  manageCustomers:()=>atLeast('admin'),    // add/edit/delete customers
+  allocate:()=>atLeast('supervisor'),      // create allocations, deliver, cancel
+  settings:()=>atLeast('superadmin'),      // super-admin settings panel
 };
 
 function itemName(id){ const i=S.items.find(x=>x.id===id); return i?i.name:'(deleted item)'; }
 function itemUnit(id){ const i=S.items.find(x=>x.id===id); return i?i.unit:''; }
 function whName(id){ const w=S.warehouses.find(x=>x.id===id); return w?w.name:'(deleted)'; }
-const stockKey=(itemId,whId)=>itemId+'__'+whId;
-function stockQty(itemId,whId){ const s=S.stock[stockKey(itemId,whId)]; return s?Number(s.quantity)||0:0; }
+function machineName(id){ const m=S.machines.find(x=>x.id===id); return m?m.name:'(deleted machine)'; }
+const uid=()=>'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+// Areas: every warehouse has at least a default "Main" area (id 'main').
+function whAreas(whId){ const w=S.warehouses.find(x=>x.id===whId);
+  const a=(w&&Array.isArray(w.areas)&&w.areas.length)?w.areas:[{id:'main',name:'Main',managerEmail:''}];
+  return a.some(x=>x.id==='main')?a:[{id:'main',name:'Main',managerEmail:''},...a]; }
+function areaName(whId,areaId){ const a=whAreas(whId).find(x=>x.id===(areaId||'main')); return a?a.name:(areaId||'Main'); }
+function areaManager(whId,areaId){ const a=whAreas(whId).find(x=>x.id===(areaId||'main')); return a?a.managerEmail:''; }
+const stockKey=(itemId,whId,areaId)=>itemId+'__'+whId+'__'+(areaId||'main');
+const legacyKey=(itemId,whId)=>itemId+'__'+whId;
+// quantity of one item in one area (legacy warehouse-level stock counts under 'main')
+function areaQty(itemId,whId,areaId){
+  const a=S.stock[stockKey(itemId,whId,areaId)]; let q=a?Number(a.quantity)||0:0;
+  if((areaId||'main')==='main'){ const lg=S.stock[legacyKey(itemId,whId)]; if(lg) q+=Number(lg.quantity)||0; }
+  return q;
+}
+// total of one item across a whole warehouse (all its areas + any legacy doc)
+function stockQty(itemId,whId){ let t=0; const pfx=itemId+'__'+whId+'__'; const lk=legacyKey(itemId,whId);
+  for(const k in S.stock){ if(k===lk||k.startsWith(pfx)) t+=Number(S.stock[k].quantity)||0; } return t; }
 function itemTotal(itemId){ return S.warehouses.reduce((a,w)=>a+stockQty(itemId,w.id),0); }
 
 async function writeLog(action, detail){
@@ -313,11 +465,17 @@ async function writeLog(action, detail){
 }
 
 // non-blocking WhatsApp send
+// Sends a WhatsApp via your existing Apps Script (same backend as the Task app),
+// which forwards to 11za using an approved template. Fire-and-forget (no-cors), like the Task app.
 async function sendWhatsApp(number, message){
-  if(!WHATSAPP.ENABLED || !WHATSAPP.ENDPOINT || !number) return;
+  const url = S.config&&S.config.whatsappUrl;
+  const on  = S.config&&S.config.whatsappEnabled;
+  const template = (S.config&&S.config.whatsappTemplate)||'';
+  if(!on || !url || !number || !template) return;
+  const dg=String(number).replace(/\D/g,''); const to=dg.length===10?'91'+dg:dg;
   try{
-    await fetch(WHATSAPP.ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({number, message})});
+    fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'waOnly', template, to, params:[message]})}).catch(()=>{});
   }catch(e){ console.warn('whatsapp send failed',e); }
 }
 
@@ -406,6 +564,18 @@ function attachListeners(){
     S.movements=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['logs']); }));
   S.listeners.push(db.collection(C.logs).orderBy('createdAt','desc').limit(200).onSnapshot(s=>{
     S.logs=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['logs']); }));
+  S.listeners.push(db.collection(C.machines).orderBy('name').onSnapshot(s=>{
+    S.machines=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['machines','builds']); }));
+  S.listeners.push(db.collection(C.builds).orderBy('createdAt','desc').limit(200).onSnapshot(s=>{
+    S.builds=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['dashboard','builds']); }));
+  S.listeners.push(db.collection(C.customers).orderBy('name').onSnapshot(s=>{
+    S.customers=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['customers','allocations','allocate']); }));
+  S.listeners.push(db.collection(C.allocations).orderBy('createdAt','desc').limit(200).onSnapshot(s=>{
+    S.allocations=s.docs.map(d=>({id:d.id,...d.data()})); refreshIfOn(['dashboard','allocations','customers','stock']); }));
+  S.listeners.push(db.collection(C.config).doc('settings').onSnapshot(d=>{
+    S.config=d.exists?d.data():{};
+    if(S.me){ buildTabs(); if(!navAllowed(S.tab)) go('dashboard'); }
+    refreshIfOn(['settings']); }));
 }
 function detachListeners(){ S.listeners.forEach(u=>{try{u()}catch(e){}}); S.listeners=[]; }
 function refreshIfOn(tabs){ if(tabs.includes(S.tab)) go(S.tab,true); }
@@ -413,29 +583,69 @@ function refreshIfOn(tabs){ if(tabs.includes(S.tab)) go(S.tab,true); }
 /* ===================================================================== */
 /*  6)  NAVIGATION                                                       */
 /* ===================================================================== */
+const ICONS={
+  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  builds:'<path d="M14.7 6.3a4 4 0 0 0-5.7 5.3L3 18v3h3l6.4-6.4a4 4 0 0 0 5.3-5.7l-2.3 2.3-2.3-.6-.6-2.3z"/>',
+  requests:'<rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 12h6M9 16h4"/>',
+  stock:'<path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/>',
+  products:'<path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/>',
+  machines:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  warehouses:'<path d="M3 21V8l9-5 9 5v13"/><path d="M3 21h18M9 21v-6h6v6"/>',
+  people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  logs:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  customers:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/>',
+  allocations:'<path d="M3 7h13l3 3v7a1 1 0 0 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><circle cx="16" cy="18" r="2"/><path d="M9 18h5M3 7v11h2"/>',
+  settings:'<path d="M4 6h10M4 12h7M4 18h12"/><circle cx="17" cy="6" r="2.2"/><circle cx="13" cy="12" r="2.2"/><circle cx="18" cy="18" r="2.2"/>',
+};
+const svgIcon=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]||''}</svg>`;
 const TABS=[
-  {k:'dashboard',label:'Dashboard',show:()=>true},
-  {k:'stock',    label:'Stock',    show:()=>true},
-  {k:'requests', label:'Requests', show:()=>true},
-  {k:'items',    label:'Items',    show:()=>can.manageItems()},
-  {k:'warehouses',label:'Warehouses',show:()=>can.manageWarehouses()},
-  {k:'people',   label:'People',   show:()=>can.managePeople()},
-  {k:'logs',     label:'Logs',     show:()=>true},
+  {k:'dashboard', label:'Dashboard',  ic:'dashboard',  show:()=>true},
+  {k:'builds',    label:'Builds',     ic:'builds',     show:()=>true},
+  {k:'allocations',label:'Allocations',ic:'allocations',show:()=>true},
+  {k:'requests',  label:'Requests',   ic:'requests',   show:()=>true},
+  {k:'stock',     label:'Stock',      ic:'stock',      show:()=>true},
+  {k:'items',     label:'Products',   ic:'products',   show:()=>can.manageItems()},
+  {k:'customers', label:'Customers',  ic:'customers',  show:()=>true},
+  {k:'machines',  label:'Machines',   ic:'machines',   show:()=>can.manageMachines()},
+  {k:'warehouses',label:'Warehouses', ic:'warehouses', show:()=>can.manageWarehouses()},
+  {k:'people',    label:'People',     ic:'people',     show:()=>can.managePeople()},
+  {k:'logs',      label:'Logs',       ic:'logs',       show:()=>true},
+  {k:'settings',  label:'Settings',   ic:'settings',   show:()=>can.settings()},
 ];
+// sections a super admin can hide from lower roles (others stay role-gated)
+const ACCESS_SECTIONS=[
+  {k:'builds',label:'Builds'},{k:'allocations',label:'Allocations'},{k:'requests',label:'Requests'},
+  {k:'stock',label:'Stock'},{k:'customers',label:'Customers'},{k:'logs',label:'Logs'},
+];
+function navAllowed(key){
+  if(!S.me) return true;
+  if(S.me.role==='superadmin') return true;        // super admin always sees everything
+  if(key==='dashboard') return true;               // never hide the home screen
+  const acc = S.config && S.config.access && S.config.access[S.me.role];
+  if(!acc) return true;                            // no rule set → visible by default
+  return acc[key]!==false;
+}
 function buildTabs(){
-  const n=$('#tabs'); n.innerHTML='';
-  TABS.filter(t=>t.show()).forEach(t=>{
-    const b=el(`<button data-k="${t.k}">${t.label}</button>`);
+  const n=$('#navList'); n.innerHTML='';
+  TABS.filter(t=>t.show() && navAllowed(t.k)).forEach(t=>{
+    const b=el(`<button data-k="${t.k}"><span class="ic">${svgIcon(t.ic)}</span>${t.label}</button>`);
     b.onclick=()=>go(t.k); n.appendChild(b);
   });
 }
-function buildTabsEmpty(){ $('#tabs').innerHTML=''; }
+function buildTabsEmpty(){ $('#navList').innerHTML=''; }
+function openSide(o){ $('#side').classList.toggle('open',o); $('#sideScrim').classList.toggle('show',o); }
+$('#menuBtn').addEventListener('click',()=>openSide(true));
+$('#sideScrim').addEventListener('click',()=>openSide(false));
 function go(tab,keepScroll){
+  if(!navAllowed(tab)) tab='dashboard';
   S.tab=tab;
-  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.k===tab));
+  document.querySelectorAll('#navList button').forEach(b=>b.classList.toggle('active',b.dataset.k===tab));
+  openSide(false);
   const v=$('#view'); const y=keepScroll?window.scrollY:0;
   ({dashboard:viewDashboard,stock:viewStock,requests:viewRequests,items:viewItems,
-    warehouses:viewWarehouses,people:viewPeople,logs:viewLogs}[tab]||viewDashboard)(v);
+    machines:viewMachines,builds:viewBuilds,customers:viewCustomers,allocations:viewAllocations,
+    warehouses:viewWarehouses,people:viewPeople,logs:viewLogs,settings:viewSettings}[tab]||viewDashboard)(v);
   if(keepScroll) window.scrollTo(0,y); else window.scrollTo(0,0);
 }
 
@@ -447,41 +657,56 @@ function go(tab,keepScroll){
 function viewDashboard(v){
   const totalItems=S.items.length, totalWh=S.warehouses.length;
   const totalUnits=S.items.reduce((a,i)=>a+itemTotal(i.id),0);
+  const mfgCount=S.items.filter(i=>i.nature==='manufacturing').length;
+  const tradeCount=S.items.filter(i=>i.nature==='trading').length;
+  const stockValue=S.items.reduce((a,i)=>a + itemTotal(i.id)*(Number(i.purchasePrice)||0), 0);
   const pending=S.requests.filter(r=>r.status==='pending').length;
   const low=S.items.filter(i=> i.lowStock>0 && itemTotal(i.id)<=Number(i.lowStock));
 
+  const activeBuilds=S.builds.filter(b=>b.status && !['completed','rejected'].includes(b.status));
   v.innerHTML='';
-  v.appendChild(el(`<div class="viewhead"><h2>Dashboard</h2><div class="spacer"></div>
-    ${can.directMove()?'<button class="btn primary" id="qMove">+ Stock movement</button>':''}</div>`));
+  v.appendChild(el(`<div class="viewhead"><h2>Dashboard</h2>
+    <div class="sub">A quick overview of stock, machine builds and what needs attention.</div></div>`));
+
+  const tiles=el('<div class="tiles"></div>');
+  const addTile=(icon,title,desc,fn)=>{ const t=el(`<div class="tile"><div class="ti">${svgIcon(icon)}</div><div><div class="tl">${esc(title)}</div><div class="td">${esc(desc)}</div></div></div>`); t.onclick=fn; tiles.appendChild(t); };
+  addTile('builds','New build','Request a machine to be built',()=>openBuildModal());
+  if(can.directMove()) addTile('stock','Stock movement','Receive, issue or transfer',()=>openMoveModal());
+  addTile('requests','New request','Ask for material in or out',()=>openRequestModal());
+  if(can.allocate()) addTile('allocations','Allocate / Deliver','Give products to a customer or person',()=>openAllocationModal());
+  v.appendChild(tiles);
 
   const grid=el(`<div class="stat-grid">
-    <div class="stat"><div class="k">Items</div><div class="v">${fmtNum(totalItems)}</div></div>
-    <div class="stat"><div class="k">Warehouses</div><div class="v">${fmtNum(totalWh)}</div></div>
-    <div class="stat"><div class="k">Total units in stock</div><div class="v">${fmtNum(totalUnits)}</div></div>
-    <div class="stat ${pending?'alert':''}"><div class="k">Pending requests</div><div class="v">${fmtNum(pending)}</div></div>
+    <div class="stat ${activeBuilds.length?'alert':''}"><div class="si">${svgIcon('builds')}</div><div class="k">Builds in progress</div><div class="v">${fmtNum(activeBuilds.length)}</div></div>
+    <div class="stat"><div class="si">${svgIcon('products')}</div><div class="k">Products</div><div class="v">${fmtNum(totalItems)}</div><div class="cap">${fmtNum(mfgCount)} made · ${fmtNum(tradeCount)} trading</div></div>
+    <div class="stat"><div class="si">${svgIcon('stock')}</div><div class="k">Stock value</div><div class="v">₹${fmtNum(Math.round(stockValue))}</div><div class="cap">at purchase price</div></div>
+    <div class="stat"><div class="si">${svgIcon('warehouses')}</div><div class="k">Warehouses</div><div class="v">${fmtNum(totalWh)}</div></div>
+    <div class="stat ${low.length?'alert':''}"><div class="si">${svgIcon('alert')}</div><div class="k">Low stock</div><div class="v">${fmtNum(low.length)}</div></div>
   </div>`);
   v.appendChild(grid);
 
-  // low stock
-  const lowCard=el(`<div class="card"><div class="ch">⚠️ Low stock ${low.length?`<span class="pill low">${low.length}</span>`:''}</div><div class="cb" id="lowBody"></div></div>`);
+  const bc=el(`<div class="card"><div class="ch">Machine builds in progress ${activeBuilds.length?`<span class="pill pending">${activeBuilds.length}</span>`:''}</div><div class="cb" id="bcBody"></div></div>`);
+  v.appendChild(bc);
+  const bcb=bc.querySelector('#bcBody');
+  if(!activeBuilds.length) bcb.innerHTML='<div class="empty">No builds in progress. Tap “New build” above to start one.</div>';
+  else activeBuilds.slice(0,6).forEach(b=>bcb.appendChild(buildRow(b)));
+
+  const toDeliver=S.allocations.filter(a=>a.status==='reserved');
+  if(toDeliver.length){
+    const dc=el(`<div class="card"><div class="ch">Reserved — waiting to deliver <span class="pill pending">${toDeliver.length}</span></div><div class="cb" id="tdBody"></div></div>`);
+    v.appendChild(dc); const tb=dc.querySelector('#tdBody');
+    toDeliver.slice(0,6).forEach(a=>tb.appendChild(allocRow(a)));
+  }
+
+  const lowCard=el(`<div class="card"><div class="ch">Low stock ${low.length?`<span class="pill low">${low.length}</span>`:''}</div><div class="cb" id="lowBody"></div></div>`);
   v.appendChild(lowCard);
   const lb=lowCard.querySelector('#lowBody');
-  if(!low.length){ lb.innerHTML='<div class="empty">Nothing low. All items above their minimum. 👍</div>'; }
+  if(!low.length){ lb.innerHTML='<div class="empty">All products are above their minimum.</div>'; }
   else low.forEach(i=>lb.appendChild(el(
     `<div class="row"><div class="grow"><div class="t1">${esc(i.name)}</div>
       <div class="t2">Minimum ${fmtNum(i.lowStock)} ${esc(i.unit||'')}</div></div>
       <div style="text-align:right"><div class="t1" style="color:var(--accent-dark)">${fmtNum(itemTotal(i.id))} ${esc(i.unit||'')}</div>
       <div class="t2">in stock</div></div></div>`)));
-
-  // recent requests
-  const rq=el(`<div class="card"><div class="ch">Recent requests</div><div class="cb" id="rqBody"></div></div>`);
-  v.appendChild(rq);
-  const rb=rq.querySelector('#rqBody');
-  const recent=S.requests.slice(0,6);
-  if(!recent.length){ rb.innerHTML='<div class="empty">No requests yet.</div>'; }
-  else recent.forEach(r=>rb.appendChild(reqRow(r,true)));
-
-  if(can.directMove()) v.querySelector('#qMove')?.addEventListener('click',()=>openMoveModal());
 }
 
 // ---------- Stock ----------
@@ -490,33 +715,42 @@ function viewStock(v){
   v.appendChild(el(`<div class="viewhead"><h2>Stock</h2><div class="spacer"></div>
     ${can.directMove()?'<button class="btn primary" id="mvBtn">+ Stock movement</button>':''}
     <button class="btn ghost" id="reqBtn">Request</button></div>`));
+  v.appendChild(el(`<div class="guide">How much of each product you have. Switch between <b>By warehouse</b> (totals) and <b>By area</b> (exact count in each rack/room). Use <b>+ Stock movement</b> to receive, issue or transfer between areas. Stock can never go below zero.</div>`));
 
   if(!S.items.length || !S.warehouses.length){
     v.appendChild(el(`<div class="card"><div class="empty"><div class="big">📦</div>
       <div>Add at least one item and one warehouse to see stock.</div></div></div>`));
   }else{
-    const search=el(`<input id="stkSearch" placeholder="Search item…" style="margin-bottom:12px;max-width:340px">`);
+    const hasAreas=S.warehouses.some(w=>whAreas(w.id).length>1);
+    const seg=el(`<div class="seg" id="stkSeg"><button class="on" data-v="wh">By warehouse</button><button data-v="area">By area</button></div>`);
+    if(hasAreas) v.appendChild(seg);
+    const search=el(`<input id="stkSearch" placeholder="Search item…" style="margin-bottom:12px;max-width:340px;display:block">`);
     v.appendChild(search);
     const card=el(`<div class="card"><div class="tablewrap"><table id="stkTable"></table></div></div>`);
     v.appendChild(card);
-    renderStockTable($('#stkTable')||card.querySelector('table'),'');
-    search.addEventListener('input',()=>renderStockTable(card.querySelector('table'),search.value.toLowerCase()));
+    let mode='wh';
+    const draw=()=>renderStockTable(card.querySelector('table'),search.value.toLowerCase(),mode==='area');
+    draw();
+    search.addEventListener('input',draw);
+    seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{ mode=b.dataset.v; seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw(); });
   }
   v.querySelector('#mvBtn')?.addEventListener('click',()=>openMoveModal());
   v.querySelector('#reqBtn')?.addEventListener('click',()=>openRequestModal());
 }
-function renderStockTable(table,filter){
-  const whs=S.warehouses;
-  let h='<thead><tr><th>Item</th>';
-  whs.forEach(w=>h+=`<th class="num">${esc(w.name)}</th>`);
-  h+='<th class="num">Total</th></tr></thead><tbody>';
+function renderStockTable(table,filter,byArea){
   const items=S.items.filter(i=>i.name.toLowerCase().includes(filter));
-  if(!items.length) h+=`<tr><td colspan="${whs.length+2}"><div class="empty">No items match.</div></td></tr>`;
+  let cols=[];
+  if(byArea){ S.warehouses.forEach(w=>whAreas(w.id).forEach(a=>cols.push({wh:w,area:a}))); }
+  else { S.warehouses.forEach(w=>cols.push({wh:w})); }
+  let h='<thead><tr><th>Item</th>';
+  cols.forEach(c=>h+=`<th class="num">${esc(c.wh.name)}${c.area?'<br><span style="font-weight:600;text-transform:none;color:var(--muted)">'+esc(c.area.name)+'</span>':''}</th>`);
+  h+='<th class="num">Total</th></tr></thead><tbody>';
+  if(!items.length) h+=`<tr><td colspan="${cols.length+2}"><div class="empty">No items match.</div></td></tr>`;
   items.forEach(i=>{
     const tot=itemTotal(i.id);
     const lowFlag=i.lowStock>0 && tot<=Number(i.lowStock);
     h+=`<tr><td><b>${esc(i.name)}</b> <span class="muted">${esc(i.unit||'')}</span>${lowFlag?' <span class="pill low">low</span>':''}</td>`;
-    whs.forEach(w=>{ const q=stockQty(i.id,w.id); h+=`<td class="num"${q?'':' class="num muted"'}>${q?fmtNum(q):'<span class="muted">0</span>'}</td>`; });
+    cols.forEach(c=>{ const q=c.area?areaQty(i.id,c.wh.id,c.area.id):stockQty(i.id,c.wh.id); h+=`<td class="num">${q?fmtNum(q):'<span class="muted">0</span>'}</td>`; });
     h+=`<td class="num"><b>${fmtNum(tot)}</b></td></tr>`;
   });
   h+='</tbody>';
@@ -528,6 +762,7 @@ function viewRequests(v){
   v.innerHTML='';
   v.appendChild(el(`<div class="viewhead"><h2>Requests</h2><div class="spacer"></div>
     <button class="btn primary" id="newReq">+ New request</button></div>`));
+  v.appendChild(el(`<div class="guide">Anyone can <b>request</b> material in or out. A supervisor or admin then approves or rejects it — approving moves the stock automatically.</div>`));
 
   const pending=S.requests.filter(r=>r.status==='pending');
   const others=S.requests.filter(r=>r.status!=='pending').slice(0,80);
@@ -567,25 +802,52 @@ function reqRow(r,readonly){
   return row;
 }
 
-// ---------- Items ----------
+// ---------- Products ----------
 function viewItems(v){
   v.innerHTML='';
-  v.appendChild(el(`<div class="viewhead"><h2>Items</h2><div class="spacer"></div>
-    <button class="btn primary" id="addItem">+ Add item</button></div>`));
+  v.appendChild(el(`<div class="viewhead"><h2>Products</h2><div class="spacer"></div>
+    <input id="prodSearch" placeholder="Search…" style="max-width:220px">
+    <button class="btn primary" id="addItem">+ Add product</button></div>`));
+  v.appendChild(el(`<div class="guide">Your master list of items. <b>Manufacturing</b> = something you make in-house; <b>Trading</b> = something you buy and resell. Tap a product to see its stock and movement history. Set a <b>low-stock level</b> so it warns you before you run out.</div>`));
+
+  const mfgCount=S.items.filter(i=>i.nature==='manufacturing').length;
+  const tradeCount=S.items.filter(i=>i.nature==='trading').length;
+  const seg=el(`<div class="seg" id="natSeg">
+    <button class="on" data-n="">All (${S.items.length})</button>
+    <button data-n="manufacturing">Manufacturing (${mfgCount})</button>
+    <button data-n="trading">Trading (${tradeCount})</button>
+  </div>`);
+  v.appendChild(seg);
+
   const card=el(`<div class="card"><div class="cb" id="ib"></div></div>`); v.appendChild(card);
-  const ib=card.querySelector('#ib');
-  if(!S.items.length) ib.innerHTML='<div class="empty"><div class="big">📦</div>No items yet. Add your first one.</div>';
-  S.items.forEach(i=>{
-    const row=el(`<div class="row"><div class="grow">
-      <div class="t1">${esc(i.name)}</div>
-      <div class="t2">${esc(i.unit||'unit')}${i.category?' · '+esc(i.category):''}${i.code?' · #'+esc(i.code):''}${i.lowStock>0?' · min '+fmtNum(i.lowStock):''} · ${fmtNum(itemTotal(i.id))} in stock</div>
-    </div><div class="acts"></div></div>`);
-    const e=el('<button class="btn ghost sm">Edit</button>');
-    const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
-    e.onclick=()=>openItemModal(i); d.onclick=()=>deleteItem(i);
-    row.querySelector('.acts').append(e,d);
-    ib.appendChild(row);
-  });
+  let q='', nat='';
+  const render=()=>{
+    const ib=card.querySelector('#ib'); ib.innerHTML='';
+    const list=S.items.filter(i=> i.name.toLowerCase().includes(q) && (!nat || i.nature===nat));
+    if(!list.length){ ib.innerHTML='<div class="empty"><div class="big">📦</div>No products match.</div>'; return; }
+    list.forEach(i=>{
+      const tot=itemTotal(i.id);
+      const low=i.lowStock>0 && tot<=Number(i.lowStock);
+      const bits=[esc(i.unit||'unit')];
+      if(i.type) bits.push(esc(i.type));
+      if(i.hsn) bits.push('HSN '+esc(i.hsn));
+      if(i.salesPrice) bits.push('₹'+fmtNum(i.salesPrice));
+      const row=el(`<div class="row">
+        <div class="grow" style="cursor:pointer">
+          <div class="t1">${esc(i.name)} ${naturePill(i.nature)}${low?' <span class="pill low">low</span>':''}</div>
+          <div class="t2">${bits.join(' · ')} · ${fmtNum(tot)} in stock</div>
+        </div><div class="acts"></div></div>`);
+      row.querySelector('.grow').onclick=()=>openProductDetail(i);
+      const e=el('<button class="btn ghost sm">Edit</button>');
+      const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
+      e.onclick=()=>openItemModal(i); d.onclick=()=>deleteItem(i);
+      row.querySelector('.acts').append(e,d);
+      ib.appendChild(row);
+    });
+  };
+  render();
+  v.querySelector('#prodSearch').addEventListener('input',e=>{q=e.target.value.toLowerCase();render();});
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{ nat=b.dataset.n; seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   v.querySelector('#addItem').addEventListener('click',()=>openItemModal());
 }
 
@@ -594,15 +856,18 @@ function viewWarehouses(v){
   v.innerHTML='';
   v.appendChild(el(`<div class="viewhead"><h2>Warehouses</h2><div class="spacer"></div>
     <button class="btn primary" id="addWh">+ Add warehouse</button></div>`));
+  v.appendChild(el(`<div class="guide">Each warehouse can be split into <b>areas</b> (racks, rooms, shelves). Stock is counted exactly per area, and you can give each area a <b>manager</b> who gets a WhatsApp whenever stock moves in or out of it. Tap a warehouse to edit its areas.</div>`));
   const card=el(`<div class="card"><div class="cb" id="wb"></div></div>`); v.appendChild(card);
   const wb=card.querySelector('#wb');
   if(!S.warehouses.length) wb.innerHTML='<div class="empty"><div class="big">🏭</div>No warehouses yet.</div>';
   S.warehouses.forEach(w=>{
     const units=S.items.reduce((a,i)=>a+stockQty(i.id,w.id),0);
-    const row=el(`<div class="row"><div class="grow">
-      <div class="t1">${esc(w.name)}</div>
+    const areas=whAreas(w.id);
+    const row=el(`<div class="row"><div class="grow" style="cursor:pointer">
+      <div class="t1">${esc(w.name)} <span class="muted" style="font-weight:600;font-size:12px">· ${areas.length} area${areas.length>1?'s':''}</span></div>
       <div class="t2">${w.location?esc(w.location)+' · ':''}${fmtNum(units)} units stored</div>
     </div><div class="acts"></div></div>`);
+    row.querySelector('.grow').onclick=()=>openWhDetail(w);
     const e=el('<button class="btn ghost sm">Edit</button>');
     const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
     e.onclick=()=>openWhModal(w); d.onclick=()=>deleteWh(w);
@@ -611,6 +876,18 @@ function viewWarehouses(v){
   });
   v.querySelector('#addWh').addEventListener('click',()=>openWhModal());
 }
+// warehouse detail: stock broken down per area
+function openWhDetail(w){
+  const areas=whAreas(w.id);
+  const sections=areas.map(a=>{
+    const rows=S.items.map(i=>{ const q=areaQty(i.id,w.id,a.id); return q>0?`<tr><td>${esc(i.name)}</td><td class="num">${fmtNum(q)} ${esc(i.unit||'')}</td></tr>`:''; }).filter(Boolean).join('');
+    const mgr=a.managerEmail?(S.people.find(p=>p.email===a.managerEmail)||{}).name||a.managerEmail:'';
+    return `<div class="subsec">${esc(a.name)}${mgr?` <span class="muted" style="text-transform:none;font-weight:600">· manager ${esc(mgr)}</span>`:''}</div>
+      ${rows?`<div class="tablewrap"><table><tbody>${rows}</tbody></table></div>`:'<div class="muted" style="font-size:13px">Empty.</div>'}`;
+  }).join('');
+  modal(w.name+' — stock by area', (w.location?`<div class="t2" style="margin-bottom:8px">${esc(w.location)}</div>`:'')+sections,
+    [{label:'Edit areas',cls:'ghost',onClick:()=>openWhModal(w)},{label:'Close',cls:'primary',onClick:closeModal}]);
+}
 
 // ---------- People ----------
 function viewPeople(v){
@@ -618,7 +895,7 @@ function viewPeople(v){
   v.appendChild(el(`<div class="viewhead"><h2>People</h2><div class="spacer"></div>
     ${can.backup()?'<button class="btn ghost" id="backupBtn">⬇ Backup</button>':''}
     <button class="btn primary" id="addP">+ Add person</button></div>`));
-  v.appendChild(el(`<div class="card" style="background:var(--accent-soft);border-color:#f3d9a8">
+  v.appendChild(el(`<div class="card" style="background:var(--accent-soft);border-color:#cdd9f6">
     <div class="row" style="border:0"><div class="grow t2">
     Adding a person here gives them a role. Their <b>login</b> (email + password) is the same
     Firebase account as the task app — create it in Firebase if they don't have one yet.</div></div></div>`));
@@ -628,14 +905,24 @@ function viewPeople(v){
   S.people.forEach(p=>{
     const isMe=p.email===S.me.email;
     const row=el(`<div class="row"><div class="grow">
-      <div class="t1">${esc(p.name||p.email)} ${isMe?'<span class="muted">(you)</span>':''} <span class="pill role">${ROLE_LABEL[p.role]||p.role}</span> ${p.active===false?'<span class="pill rejected">disabled</span>':''}</div>
+      <div class="t1">${esc(p.name||p.email)} ${isMe?'<span class="muted">(you)</span>':''} <span class="pill role">${ROLE_LABEL[p.role]||p.role}</span> ${p.active===false?'<span class="pill rejected">archived</span>':''}</div>
       <div class="t2">${esc(p.email)}${p.whatsapp?' · 📱 '+esc(p.whatsapp):''}</div>
     </div><div class="acts"></div></div>`);
-    const e=el('<button class="btn ghost sm">Edit</button>');
-    e.onclick=()=>openPersonModal(p);
-    row.querySelector('.acts').append(e);
-    if(!isMe){ const d=el('<button class="btn bad sm" style="margin-left:6px">Remove</button>');
-      d.onclick=()=>deletePerson(p); row.querySelector('.acts').append(d); }
+    const acts=row.querySelector('.acts');
+    const isSuper=p.role==='superadmin', iAmSuper=S.me.role==='superadmin';
+    const protectedRow = isSuper && !iAmSuper;   // only a super admin may touch a super admin
+    if(protectedRow){
+      acts.appendChild(el('<span class="muted" style="font-size:12px">🔒 Protected</span>'));
+    } else {
+      const e=el('<button class="btn ghost sm">Edit</button>'); e.onclick=()=>openPersonModal(p); acts.appendChild(e);
+      if(!isMe){
+        const archived=p.active===false;
+        const a=el(`<button class="btn ghost sm" style="margin-left:6px">${archived?'Restore':'Archive'}</button>`);
+        a.onclick=()=>archivePerson(p,!archived); acts.appendChild(a);
+        if(iAmSuper){ const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
+          d.onclick=()=>deletePerson(p); acts.appendChild(d); }
+      }
+    }
     pb.appendChild(row);
   });
   v.querySelector('#addP').addEventListener('click',()=>openPersonModal());
@@ -691,54 +978,189 @@ function busy(btn,on,label){ btn.disabled=on; if(on){ btn.dataset._t=btn.textCon
 
 // --- Item modal ---
 function openItemModal(item){
-  const m=modal(item?'Edit item':'Add item',`
-    <label class="fl">Name *</label><input id="iName" value="${esc(item?.name||'')}" placeholder="e.g. M8 Bolt">
-    <label class="fl">Unit *</label><input id="iUnit" value="${esc(item?.unit||'')}" placeholder="pieces, kg, boxes, litres…">
-    <label class="fl">Category</label><input id="iCat" value="${esc(item?.category||'')}" placeholder="optional">
-    <label class="fl">Item code</label><input id="iCode" value="${esc(item?.code||'')}" placeholder="optional">
-    <label class="fl">Low-stock minimum</label><input id="iLow" type="number" min="0" value="${item?.lowStock||''}" placeholder="alert when total falls to this">
+  let attrs = Array.isArray(item?.attributes)? JSON.parse(JSON.stringify(item.attributes)) : [];
+  let vars  = Array.isArray(item?.variants)?   JSON.parse(JSON.stringify(item.variants))   : [];
+  modal(item?'Edit product':'Add product',`
+    <div class="fsec">Basics</div>
+    <label class="fl">Product name *</label><input id="iName" value="${esc(item?.name||'')}" placeholder="e.g. M8 Bolt">
+    <div class="fg2">
+      <div><label class="fl">Nature *</label>
+        <select id="iNature">
+          <option value="">— choose —</option>
+          <option value="manufacturing" ${item?.nature==='manufacturing'?'selected':''}>Manufacturing (we make it)</option>
+          <option value="trading" ${item?.nature==='trading'?'selected':''}>Trading (we buy &amp; resell)</option>
+        </select>
+      </div>
+      <div><label class="fl">Unit *</label><input id="iUnit" value="${esc(item?.unit||'')}" placeholder="pieces, kg, boxes…"></div>
+    </div>
+    <label class="fl">Sub-type <span class="hint">optional, e.g. Raw material, Finished, Spare</span></label><input id="iType" value="${esc(item?.type||'')}" placeholder="e.g. Raw material, Finished, Spare">
+
+    <div class="fsec">Pricing &amp; tax <span style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">— all optional</span></div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">Sales price (₹)</label><input id="iSale" type="number" min="0" step="any" value="${item?.salesPrice||''}"></div>
+      <div style="flex:1"><label class="fl">Purchase price (₹)</label><input id="iBuy" type="number" min="0" step="any" value="${item?.purchasePrice||''}"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">Tax %</label><input id="iTax" type="number" min="0" step="any" value="${item?.tax||''}"></div>
+      <div style="flex:1"><label class="fl">Sales tax %</label><input id="iStax" type="number" min="0" step="any" value="${item?.salesTax||''}"></div>
+      <div style="flex:1"><label class="fl">GST %</label><input id="iGst" type="number" min="0" step="any" value="${item?.gst||''}"></div>
+    </div>
+
+    <div class="fsec">Identification <span style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">— optional</span></div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">HSN code</label><input id="iHsn" value="${esc(item?.hsn||'')}"></div>
+      <div style="flex:1"><label class="fl">Barcode</label><input id="iBar" value="${esc(item?.barcode||'')}" placeholder="scan/print coming next stage"></div>
+    </div>
+
+    <div class="fsec">Stock alert</div>
+    <label class="fl">Low-stock minimum <span class="hint">warns you when total falls to this number</span></label>
+    <input id="iLow" type="number" min="0" value="${item?.lowStock||''}" placeholder="e.g. 50">
+    <label class="fl">Notes</label><textarea id="iNotes" placeholder="optional">${esc(item?.notes||'')}</textarea>
+
+    <div class="subsec">Attributes (optional, can carry a price)</div>
+    <div class="chips" id="attrChips"></div>
+    <div class="addline"><input id="attrName" placeholder="e.g. Colour: Red"><input id="attrPrice" type="number" step="any" placeholder="₹ ±" style="max-width:80px;flex:0 0 auto"><button type="button" class="btn ghost sm" id="attrAdd">Add</button></div>
+
+    <div class="subsec">Variants (optional, can carry a price)</div>
+    <div class="chips" id="varChips"></div>
+    <div class="addline"><input id="varName" placeholder="e.g. 10mm"><input id="varPrice" type="number" step="any" placeholder="₹ ±" style="max-width:80px;flex:0 0 auto"><button type="button" class="btn ghost sm" id="varAdd">Add</button></div>
+
     <div class="field-err" id="iErr"></div>`,
     [{label:'Cancel',onClick:closeModal},
      {label:item?'Save':'Add',cls:'primary',onClick:async(btn)=>{
         const name=$('#iName').value.trim(), unit=$('#iUnit').value.trim();
+        const nature=$('#iNature').value;
         if(!name||!unit){ $('#iErr').textContent='Name and unit are required.'; return; }
+        if(!nature){ $('#iErr').textContent='Please choose the nature: Manufacturing or Trading.'; return; }
         busy(btn,true);
-        const data={name,unit,category:$('#iCat').value.trim(),code:$('#iCode').value.trim(),
-          lowStock:Number($('#iLow').value)||0};
+        const num=id=>{const x=Number($(id).value);return isNaN(x)?0:x;};
+        const data={name,unit,nature,type:$('#iType').value.trim(),
+          salesPrice:num('#iSale'),purchasePrice:num('#iBuy'),
+          tax:num('#iTax'),salesTax:num('#iStax'),gst:num('#iGst'),
+          hsn:$('#iHsn').value.trim(),barcode:$('#iBar').value.trim(),
+          notes:$('#iNotes').value.trim(),lowStock:num('#iLow'),
+          attributes:attrs,variants:vars};
         try{
-          if(item){ await db.collection(C.items).doc(item.id).update(data); writeLog('Edited item',name); }
-          else { data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.items).add(data); writeLog('Added item',name); }
+          if(item){ await db.collection(C.items).doc(item.id).update(data); writeLog('Edited product',name); }
+          else { data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.items).add(data); writeLog('Added product',name); }
           closeModal(); toast('Saved','good');
         }catch(e){ busy(btn,false); $('#iErr').textContent='Could not save. '+(e.message||''); }
      }}]);
+  function drawChips(){
+    const ac=$('#attrChips'), vc=$('#varChips');
+    ac.innerHTML = attrs.length? '' : '<span class="muted" style="font-size:13px">None yet.</span>';
+    attrs.forEach((a,idx)=>{ const c=el(`<span class="chip">${esc(a.name)}${a.price?` <b>₹${fmtNum(a.price)}</b>`:''} <span class="rm">×</span></span>`);
+      c.querySelector('.rm').onclick=()=>{attrs.splice(idx,1);drawChips();}; ac.appendChild(c); });
+    vc.innerHTML = vars.length? '' : '<span class="muted" style="font-size:13px">None yet.</span>';
+    vars.forEach((a,idx)=>{ const c=el(`<span class="chip">${esc(a.name)}${a.price?` <b>₹${fmtNum(a.price)}</b>`:''} <span class="rm">×</span></span>`);
+      c.querySelector('.rm').onclick=()=>{vars.splice(idx,1);drawChips();}; vc.appendChild(c); });
+  }
+  drawChips();
+  $('#attrAdd').onclick=()=>{ const n=$('#attrName').value.trim(); if(!n)return; attrs.push({name:n,price:Number($('#attrPrice').value)||0}); $('#attrName').value='';$('#attrPrice').value=''; drawChips(); };
+  $('#varAdd').onclick=()=>{ const n=$('#varName').value.trim(); if(!n)return; vars.push({name:n,price:Number($('#varPrice').value)||0}); $('#varName').value='';$('#varPrice').value=''; drawChips(); };
+}
+
+// Product detail with Details / Stock / Movement report (loaded on click)
+function openProductDetail(i){
+  const dr=(k,val)=> val? `<div><div class="dk">${k}</div><div class="dv">${val}</div></div>`:'';
+  const detailsHTML=`<div class="detail-grid">
+    <div><div class="dk">Nature</div><div class="dv">${naturePill(i.nature)}</div></div>
+    <div><div class="dk">Unit</div><div class="dv">${esc(i.unit||'—')}</div></div>
+    ${dr('Sub-type',esc(i.type||''))}
+    ${dr('Sales price',i.salesPrice?'₹'+fmtNum(i.salesPrice):'')}
+    ${dr('Purchase price',i.purchasePrice?'₹'+fmtNum(i.purchasePrice):'')}
+    ${dr('GST %',i.gst||'')}${dr('Tax %',i.tax||'')}${dr('Sales tax %',i.salesTax||'')}
+    ${dr('HSN code',esc(i.hsn||''))}${dr('Barcode',esc(i.barcode||''))}
+    ${dr('Low-stock min',i.lowStock||'')}
+  </div>
+  ${i.notes?`<div class="subsec">Notes</div><div>${esc(i.notes)}</div>`:''}
+  ${(i.attributes&&i.attributes.length)?`<div class="subsec">Attributes</div><div class="chips">${i.attributes.map(a=>`<span class="chip">${esc(a.name)}${a.price?` <b>₹${fmtNum(a.price)}</b>`:''}</span>`).join('')}</div>`:''}
+  ${(i.variants&&i.variants.length)?`<div class="subsec">Variants</div><div class="chips">${i.variants.map(a=>`<span class="chip">${esc(a.name)}${a.price?` <b>₹${fmtNum(a.price)}</b>`:''}</span>`).join('')}</div>`:''}`;
+
+  const stockHTML=`<div class="tablewrap"><table><thead><tr><th>Warehouse</th><th class="num">Quantity</th></tr></thead><tbody>
+    ${S.warehouses.map(w=>`<tr><td>${esc(w.name)}</td><td class="num">${fmtNum(stockQty(i.id,w.id))}</td></tr>`).join('')||'<tr><td colspan="2"><div class="empty">No warehouses yet.</div></td></tr>'}
+    <tr><td><b>Total</b></td><td class="num"><b>${fmtNum(itemTotal(i.id))} ${esc(i.unit||'')}</b></td></tr></tbody></table></div>`;
+
+  const back=modal(i.name, `
+    <div class="detail-tabs">
+      <button data-d="details" class="active">Details</button>
+      <button data-d="stock">Stock</button>
+      <button data-d="moves">Movement report</button>
+    </div>
+    <div id="dBody" style="padding-top:14px"></div>`,
+    [{label:'Edit',cls:'ghost',onClick:()=>{closeModal();openItemModal(i);}},
+     {label:'Close',cls:'primary',onClick:closeModal}]);
+  const body=back.querySelector('#dBody');
+  const renderD=(d)=>{
+    back.querySelectorAll('.detail-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.d===d));
+    if(d==='details') body.innerHTML=detailsHTML;
+    else if(d==='stock') body.innerHTML=stockHTML;
+    else {
+      const ms=S.movements.filter(m=>m.itemId===i.id);
+      body.innerHTML = ms.length
+        ? `<div class="tablewrap"><table><thead><tr><th>When</th><th>Type</th><th class="num">Qty</th><th>Where</th><th>By</th></tr></thead><tbody>${ms.map(m=>`<tr><td>${fmtDate(m.createdAt)}</td><td><span class="pill ${m.type}">${m.type}</span></td><td class="num">${fmtNum(m.quantity)}</td><td>${esc(m.type==='transfer'?(whName(m.fromWarehouseId)+' → '+whName(m.toWarehouseId)):whName(m.warehouseId))}</td><td>${esc(m.byName||'')}</td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="empty">No movements recorded for this product yet.</div>';
+    }
+  };
+  renderD('details');
+  back.querySelectorAll('.detail-tabs button').forEach(b=>b.onclick=()=>renderD(b.dataset.d));
 }
 async function deleteItem(i){
-  if(itemTotal(i.id)>0){ toast('Cannot delete — item still has stock','bad'); return; }
-  confirmModal('Delete item?',`Delete "${esc(i.name)}"? This cannot be undone.`,async(btn)=>{
+  if(itemTotal(i.id)>0){ toast('Cannot delete — product still has stock','bad'); return; }
+  confirmModal('Delete product?',`Delete "${esc(i.name)}"? This cannot be undone.`,async(btn)=>{
     busy(btn,true);
-    try{ await db.collection(C.items).doc(i.id).delete(); writeLog('Deleted item',i.name); closeModal(); toast('Deleted'); }
+    try{ await db.collection(C.items).doc(i.id).delete(); writeLog('Deleted product',i.name); closeModal(); toast('Deleted'); }
     catch(e){ busy(btn,false); toast('Delete failed','bad'); }
   });
 }
 
-// --- Warehouse modal ---
+// --- Warehouse modal (with areas + per-area manager) ---
 function openWhModal(w){
+  let areas = (w&&Array.isArray(w.areas)&&w.areas.length)? JSON.parse(JSON.stringify(w.areas)) : [{id:'main',name:'Main',managerEmail:''}];
+  if(!areas.some(a=>a.id==='main')) areas.unshift({id:'main',name:'Main',managerEmail:''});
+  const persOpts=sel=>`<option value="">— no manager —</option>`+S.people.filter(p=>p.active!==false).map(p=>`<option value="${esc(p.email)}" ${p.email===sel?'selected':''}>${esc(p.name||p.email)}</option>`).join('');
   modal(w?'Edit warehouse':'Add warehouse',`
+    <div class="fsec">Warehouse</div>
     <label class="fl">Name *</label><input id="wName" value="${esc(w?.name||'')}" placeholder="e.g. Main Store">
     <label class="fl">Location</label><input id="wLoc" value="${esc(w?.location||'')}" placeholder="optional">
+    <div class="fsec">Areas inside this warehouse</div>
+    <div class="t2" style="margin:-2px 0 8px">Each area holds its own stock. The manager is notified on WhatsApp when stock moves in or out of their area.</div>
+    <div id="wAreas"></div>
+    <button type="button" class="btn ghost sm" id="wAddArea" style="margin-top:8px">+ Add area</button>
     <div class="field-err" id="wErr"></div>`,
     [{label:'Cancel',onClick:closeModal},
      {label:w?'Save':'Add',cls:'primary',onClick:async(btn)=>{
         const name=$('#wName').value.trim();
         if(!name){ $('#wErr').textContent='Name is required.'; return; }
+        // pull area edits from inputs
+        areas.forEach((a,idx)=>{ const nm=$(`#aN${idx}`); const mg=$(`#aM${idx}`); if(nm) a.name=nm.value.trim()||a.name; if(mg) a.managerEmail=mg.value; });
+        const cleanAreas=areas.filter(a=>a.id==='main'||a.name);
         busy(btn,true);
-        const data={name,location:$('#wLoc').value.trim()};
+        const data={name,location:$('#wLoc').value.trim(),areas:cleanAreas};
         try{
           if(w){ await db.collection(C.warehouses).doc(w.id).update(data); writeLog('Edited warehouse',name); }
           else { data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.warehouses).add(data); writeLog('Added warehouse',name); }
           closeModal(); toast('Saved','good');
         }catch(e){ busy(btn,false); $('#wErr').textContent='Could not save.'; }
      }}]);
+  const draw=()=>{
+    const box=$('#wAreas');
+    box.innerHTML=areas.map((a,idx)=>`<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">
+      <div class="fg2">
+        <div><label class="fl" style="margin-top:0">Area name</label><input id="aN${idx}" value="${esc(a.name)}" ${a.id==='main'?'':''}></div>
+        <div><label class="fl" style="margin-top:0">Manager</label><select id="aM${idx}">${persOpts(a.managerEmail)}</select></div>
+      </div>
+      ${a.id==='main'?'<div class="t2" style="margin-top:4px">Default area — existing stock lives here. Can be renamed but not removed.</div>':`<button type="button" class="btn bad sm" data-rm="${idx}" style="margin-top:8px">Remove area</button>`}
+    </div>`).join('');
+    box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
+      // save current edits before re-render
+      areas.forEach((a,i)=>{ const nm=$(`#aN${i}`); const mg=$(`#aM${i}`); if(nm)a.name=nm.value; if(mg)a.managerEmail=mg.value; });
+      areas.splice(+b.dataset.rm,1); draw();
+    });
+  };
+  draw();
+  $('#wAddArea').onclick=()=>{ areas.forEach((a,i)=>{ const nm=$(`#aN${i}`); const mg=$(`#aM${i}`); if(nm)a.name=nm.value; if(mg)a.managerEmail=mg.value; });
+    areas.push({id:uid(),name:'',managerEmail:''}); draw(); };
 }
 async function deleteWh(w){
   const units=S.items.reduce((a,i)=>a+stockQty(i.id,w.id),0);
@@ -778,12 +1200,19 @@ function openPersonModal(p){
         }catch(e){ busy(btn,false); $('#pErr').textContent='Could not save.'; }
      }}]);
 }
+async function archivePerson(p,doArchive){
+  try{ await db.collection(C.people).doc(p.id).update({active:!doArchive});
+    writeLog(doArchive?'Archived person':'Restored person',p.email); toast(doArchive?'Archived':'Restored','good'); }
+  catch(e){ toast('Failed','bad'); }
+}
 async function deletePerson(p){
-  confirmModal('Remove person?',`Remove "${esc(p.name||p.email)}"? They will lose access (their login still exists).`,async(btn)=>{
+  if(S.me.role!=='superadmin'){ toast('Only a super admin can delete — use Archive','bad'); return; }
+  if(p.role==='superadmin' && S.people.filter(x=>x.role==='superadmin').length<=1){ toast('Cannot delete the only super admin','bad'); return; }
+  confirmModal('Delete person?',`Permanently delete "${esc(p.name||p.email)}"? Their login still exists in Firebase. Archive instead if you only want to block access.`,async(btn)=>{
     busy(btn,true);
-    try{ await db.collection(C.people).doc(p.id).delete(); writeLog('Removed person',p.email); closeModal(); toast('Removed'); }
+    try{ await db.collection(C.people).doc(p.id).delete(); writeLog('Deleted person',p.email); closeModal(); toast('Deleted'); }
     catch(e){ busy(btn,false); toast('Failed','bad'); }
-  });
+  },'Delete','bad');
 }
 
 // --- Stock movement modal (direct, supervisor+) ---
@@ -791,65 +1220,104 @@ function openMoveModal(){
   if(!S.items.length||!S.warehouses.length){ toast('Add an item and a warehouse first','bad'); return; }
   const itemOpts=S.items.map(i=>`<option value="${i.id}">${esc(i.name)} (${esc(i.unit||'unit')})</option>`).join('');
   const whOpts=S.warehouses.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  const areaOpts=whId=>whAreas(whId).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
   modal('Stock movement',`
     <label class="fl">Type *</label>
     <select id="mType">
-      <option value="in">IN — receive into warehouse</option>
-      <option value="out">OUT — issue from warehouse</option>
-      <option value="transfer">TRANSFER — move between warehouses</option>
+      <option value="in">IN — receive into an area</option>
+      <option value="out">OUT — issue from an area</option>
+      <option value="transfer">TRANSFER — move between areas / warehouses</option>
     </select>
     <label class="fl">Item *</label><select id="mItem">${itemOpts}</select>
-    <label class="fl" id="mWhL">Warehouse *</label><select id="mWh">${whOpts}</select>
-    <div id="mToWrap" class="hidden"><label class="fl">To warehouse *</label><select id="mTo">${whOpts}</select></div>
+    <div class="fg2">
+      <div><label class="fl" id="mWhL">Warehouse *</label><select id="mWh">${whOpts}</select></div>
+      <div><label class="fl" id="mAreaL">Area *</label><select id="mArea">${areaOpts(S.warehouses[0].id)}</select></div>
+    </div>
+    <div id="mToWrap" class="hidden">
+      <div class="fg2">
+        <div><label class="fl">To warehouse *</label><select id="mTo">${whOpts}</select></div>
+        <div><label class="fl">To area *</label><select id="mToArea">${areaOpts(S.warehouses[0].id)}</select></div>
+      </div>
+    </div>
     <label class="fl">Quantity *</label><input id="mQty" type="number" min="0" step="any" placeholder="0">
+    <div id="mAvail" class="t2" style="margin-top:-2px"></div>
     <label class="fl">Note</label><input id="mNote" placeholder="optional — supplier, bill no, reason">
     <div class="field-err" id="mErr"></div>`,
     [{label:'Cancel',onClick:closeModal},
      {label:'Record',cls:'primary',onClick:async(btn)=>{
-        const type=$('#mType').value, itemId=$('#mItem').value, whId=$('#mWh').value,
-              toId=$('#mTo').value, qty=Number($('#mQty').value), note=$('#mNote').value.trim();
+        const type=$('#mType').value, itemId=$('#mItem').value, whId=$('#mWh').value, areaId=$('#mArea').value,
+              toId=$('#mTo').value, toAreaId=$('#mToArea').value, qty=Number($('#mQty').value), note=$('#mNote').value.trim();
         if(!(qty>0)){ $('#mErr').textContent='Enter a quantity greater than 0.'; return; }
-        if(type==='transfer' && whId===toId){ $('#mErr').textContent='Choose two different warehouses.'; return; }
+        if(type==='transfer' && whId===toId && areaId===toAreaId){ $('#mErr').textContent='Choose a different area or warehouse to move to.'; return; }
         busy(btn,true);
-        try{ await doMovement({type,itemId,whId,toId,qty,note}); closeModal(); toast('Stock updated','good'); }
+        try{ await doMovement({type,itemId,whId,areaId,toId,toAreaId,qty,note}); closeModal(); toast('Stock updated','good'); }
         catch(e){ busy(btn,false); $('#mErr').textContent=e.message||'Could not update stock.'; }
      }}]);
-  const typeSel=$('#mType');
-  typeSel.addEventListener('change',()=>{
-    const t=typeSel.value;
+  const refreshAreas=(whSel,areaSel)=>{ const w=$(whSel).value; $(areaSel).innerHTML=areaOpts(w); };
+  const showAvail=()=>{ const t=$('#mType').value; if(t==='in'){ $('#mAvail').textContent=''; return; }
+    const a=areaQty($('#mItem').value,$('#mWh').value,$('#mArea').value);
+    $('#mAvail').innerHTML=`In this area now: <b>${fmtNum(a)}</b> ${esc(itemUnit($('#mItem').value))}`; };
+  $('#mType').addEventListener('change',()=>{
+    const t=$('#mType').value;
     $('#mToWrap').classList.toggle('hidden',t!=='transfer');
     $('#mWhL').textContent = t==='transfer'?'From warehouse *':'Warehouse *';
+    $('#mAreaL').textContent = t==='transfer'?'From area *':'Area *';
+    showAvail();
   });
+  $('#mWh').addEventListener('change',()=>{ refreshAreas('#mWh','#mArea'); showAvail(); });
+  $('#mTo').addEventListener('change',()=>refreshAreas('#mTo','#mToArea'));
+  $('#mItem').addEventListener('change',showAvail);
+  $('#mArea').addEventListener('change',showAvail);
+  showAvail();
 }
 
 // core: apply a movement with a transaction so stock never goes wrong
-async function doMovement({type,itemId,whId,toId,qty,note,viaRequest}){
+async function doMovement({type,itemId,whId,areaId,toId,toAreaId,qty,note,viaRequest}){
+  areaId=areaId||'main'; toAreaId=toAreaId||'main';
   await db.runTransaction(async tx=>{
     if(type==='in'){
-      const ref=db.collection(C.stock).doc(stockKey(itemId,whId));
+      const ref=db.collection(C.stock).doc(stockKey(itemId,whId,areaId));
       const s=await tx.get(ref); const cur=s.exists?Number(s.data().quantity)||0:0;
-      tx.set(ref,{itemId,warehouseId:whId,quantity:cur+qty},{merge:true});
+      tx.set(ref,{itemId,warehouseId:whId,areaId,quantity:cur+qty},{merge:true});
     } else if(type==='out'){
-      const ref=db.collection(C.stock).doc(stockKey(itemId,whId));
-      const s=await tx.get(ref); const cur=s.exists?Number(s.data().quantity)||0:0;
-      if(qty>cur) throw new Error(`Only ${fmtNum(cur)} in ${whName(whId)}.`);
-      tx.set(ref,{itemId,warehouseId:whId,quantity:cur-qty},{merge:true});
-    } else { // transfer
-      const fromRef=db.collection(C.stock).doc(stockKey(itemId,whId));
-      const toRef=db.collection(C.stock).doc(stockKey(itemId,toId));
-      const fs=await tx.get(fromRef); const ts=await tx.get(toRef);
-      const fcur=fs.exists?Number(fs.data().quantity)||0:0;
+      const ref=db.collection(C.stock).doc(stockKey(itemId,whId,areaId));
+      const legRef = areaId==='main'? db.collection(C.stock).doc(legacyKey(itemId,whId)) : null;
+      const s=await tx.get(ref); const ls=legRef?await tx.get(legRef):null;
+      const cur=(s.exists?Number(s.data().quantity)||0:0)+(ls&&ls.exists?Number(ls.data().quantity)||0:0);
+      if(qty>cur) throw new Error(`Only ${fmtNum(cur)} in ${whName(whId)} · ${areaName(whId,areaId)}.`);
+      tx.set(ref,{itemId,warehouseId:whId,areaId,quantity:cur-qty},{merge:true});
+      if(legRef&&ls&&ls.exists) tx.delete(legRef);
+    } else { // transfer (area → area, even across warehouses)
+      const fromRef=db.collection(C.stock).doc(stockKey(itemId,whId,areaId));
+      const toRef=db.collection(C.stock).doc(stockKey(itemId,toId,toAreaId));
+      const legRef = areaId==='main'? db.collection(C.stock).doc(legacyKey(itemId,whId)) : null;
+      const fs=await tx.get(fromRef); const ts=await tx.get(toRef); const ls=legRef?await tx.get(legRef):null;
+      const fcur=(fs.exists?Number(fs.data().quantity)||0:0)+(ls&&ls.exists?Number(ls.data().quantity)||0:0);
       const tcur=ts.exists?Number(ts.data().quantity)||0:0;
-      if(qty>fcur) throw new Error(`Only ${fmtNum(fcur)} in ${whName(whId)}.`);
-      tx.set(fromRef,{itemId,warehouseId:whId,quantity:fcur-qty},{merge:true});
-      tx.set(toRef,{itemId,warehouseId:toId,quantity:tcur+qty},{merge:true});
+      if(qty>fcur) throw new Error(`Only ${fmtNum(fcur)} in ${whName(whId)} · ${areaName(whId,areaId)}.`);
+      tx.set(fromRef,{itemId,warehouseId:whId,areaId,quantity:fcur-qty},{merge:true});
+      tx.set(toRef,{itemId,warehouseId:toId,areaId:toAreaId,quantity:tcur+qty},{merge:true});
+      if(legRef&&ls&&ls.exists) tx.delete(legRef);
     }
   });
   const mv={type,itemId,quantity:qty,note:note||'',byName:S.me.name,byEmail:S.me.email,
     createdAt:FieldValue.serverTimestamp(), viaRequest:viaRequest||false};
-  if(type==='transfer'){ mv.fromWarehouseId=whId; mv.toWarehouseId=toId; } else { mv.warehouseId=whId; }
+  if(type==='transfer'){ mv.fromWarehouseId=whId; mv.fromAreaId=areaId; mv.toWarehouseId=toId; mv.toAreaId=toAreaId; }
+  else { mv.warehouseId=whId; mv.areaId=areaId; }
   await db.collection(C.movements).add(mv);
   writeLog('Stock '+type.toUpperCase(), `${fmtNum(qty)} ${itemUnit(itemId)} ${itemName(itemId)}`);
+  notifyAreaManagers({type,itemId,whId,areaId,toId,toAreaId,qty});
+}
+// notify the manager(s) of the area(s) involved in a movement
+function notifyAreaManagers({type,itemId,whId,areaId,toId,toAreaId,qty}){
+  const tell=(em,msg)=>{ if(!em) return; const p=S.people.find(x=>x.email===em); if(p&&p.whatsapp&&p.active!==false) sendWhatsApp(p.whatsapp,msg); };
+  const what=`${fmtNum(qty)} ${itemUnit(itemId)} ${itemName(itemId)}`;
+  if(type==='in')  tell(areaManager(whId,areaId), `Stock IN: ${what} into ${whName(whId)} · ${areaName(whId,areaId)}.`);
+  if(type==='out') tell(areaManager(whId,areaId), `Stock OUT: ${what} from ${whName(whId)} · ${areaName(whId,areaId)}.`);
+  if(type==='transfer'){
+    tell(areaManager(whId,areaId), `Transfer OUT: ${what} → ${whName(toId)} · ${areaName(toId,toAreaId)}.`);
+    tell(areaManager(toId,toAreaId), `Transfer IN: ${what} from ${whName(whId)} · ${areaName(whId,areaId)}.`);
+  }
 }
 
 // --- Request modal (anyone) ---
@@ -928,6 +1396,737 @@ function confirmModal(title,msg,onYes,yesLabel,yesCls){
 /* ===================================================================== */
 /*  9)  BACKUP                                                           */
 /* ===================================================================== */
+/* ===================================================================== */
+/*  MACHINES  (templates with a parts list / bill of materials)          */
+/* ===================================================================== */
+function maxBuildable(m){
+  const bom=(m.bom||[]).filter(x=>x.itemId&&Number(x.qty)>0);
+  if(!bom.length) return 0;
+  return Math.floor(Math.min(...bom.map(x=>itemTotal(x.itemId)/(Number(x.qty)||1))));
+}
+function viewMachines(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Machines</h2>
+    <div class="sub">Each machine has a parts list. Builds use this to know what to issue from stock.</div>
+    <div class="spacer"></div><button class="btn primary" id="addMac">+ Add machine</button></div>`));
+  const card=el(`<div class="card"><div class="cb" id="mb"></div></div>`); v.appendChild(card);
+  const mb=card.querySelector('#mb');
+  if(!S.machines.length) mb.innerHTML='<div class="empty"><div class="big">⚙️</div>No machines yet. Add one and list the parts it needs.</div>';
+  S.machines.forEach(m=>{
+    const parts=(m.bom||[]).length;
+    const can=maxBuildable(m);
+    const canPill = parts? (can>0?`<span class="pill completed">can build ${fmtNum(can)} now</span>`:'<span class="pill short">parts short</span>') : '';
+    const row=el(`<div class="row"><div class="grow" style="cursor:pointer">
+      <div class="t1">${esc(m.name)}${m.code?' <span class="muted">#'+esc(m.code)+'</span>':''} ${canPill}</div>
+      <div class="t2">${parts} part${parts===1?'':'s'} in list${m.notes?' · '+esc(m.notes):''}</div>
+    </div><div class="acts"></div></div>`);
+    row.querySelector('.grow').onclick=()=>openMachineDetail(m);
+    const e=el('<button class="btn ghost sm">Edit</button>'); e.onclick=()=>openMachineModal(m);
+    const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>'); d.onclick=()=>deleteMachine(m);
+    row.querySelector('.acts').append(e,d);
+    mb.appendChild(row);
+  });
+  v.querySelector('#addMac').onclick=()=>openMachineModal();
+}
+// machine detail: parts list with current stock + how many can be built
+function openMachineDetail(m){
+  const bom=(m.bom||[]).filter(x=>x.itemId&&Number(x.qty)>0);
+  const can=maxBuildable(m);
+  const rows=bom.map(x=>{ const have=itemTotal(x.itemId); const need=Number(x.qty)||0; const enough=have>=need;
+    return `<tr><td>${esc(itemName(x.itemId))}</td><td class="num">${fmtNum(need)} ${esc(itemUnit(x.itemId))}</td>
+      <td class="num">${fmtNum(have)}</td><td class="num">${enough?'✓':`<span class="pill short">low</span>`}</td></tr>`; }).join('');
+  const table=bom.length?`<div class="tablewrap"><table><thead><tr><th>Part</th><th class="num">Per machine</th><th class="num">In stock</th><th class="num"></th></tr></thead><tbody>${rows}</tbody></table></div>`
+    :'<div class="muted" style="font-size:13px">No parts added yet.</div>';
+  const banner = bom.length? `<div class="guide" style="margin-bottom:12px">With the stock you have now, you can build <b>${fmtNum(can)}</b> of this machine.</div>`:'';
+  modal(m.name+(m.code?' · #'+m.code:''), banner+table+'<div id="mdActs" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"></div>',
+    [{label:'Edit',cls:'ghost',onClick:()=>openMachineModal(m)},{label:'Close',cls:'primary',onClick:closeModal}]);
+  const acts=$('#mdActs');
+  const start=el('<button class="btn good">Start a build</button>'); start.onclick=()=>{ closeModal(); openBuildModal(m.id); }; acts.appendChild(start);
+}
+function openMachineModal(m){
+  if(!S.items.length){ toast('Add some products first','bad'); return; }
+  let bom = Array.isArray(m?.bom)? JSON.parse(JSON.stringify(m.bom)) : [];
+  const itemOpts=sel=>S.items.map(i=>`<option value="${i.id}" ${sel===i.id?'selected':''}>${esc(i.name)}</option>`).join('');
+  modal(m?'Edit machine':'Add machine',`
+    <label class="fl">Machine name *</label><input id="mcName" value="${esc(m?.name||'')}" placeholder="e.g. Packing Machine MK2">
+    <label class="fl">Code</label><input id="mcCode" value="${esc(m?.code||'')}" placeholder="optional">
+    <label class="fl">Notes</label><input id="mcNotes" value="${esc(m?.notes||'')}" placeholder="optional">
+    <div class="subsec">Parts list (bill of materials)</div>
+    <div class="guide" style="margin-bottom:10px">Add each product this machine needs and how many. When a build is approved, these are issued from stock automatically.</div>
+    <div id="bomList"></div>
+    <button type="button" class="btn ghost sm" id="bomAdd" style="margin-top:6px">+ Add part</button>
+    <div class="field-err" id="mcErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:m?'Save':'Add',cls:'primary',onClick:async(btn)=>{
+       const name=$('#mcName').value.trim(); if(!name){ $('#mcErr').textContent='Name is required.'; return; }
+       readBom(); const clean=bom.filter(r=>r.itemId&&Number(r.qty)>0);
+       busy(btn,true);
+       const data={name,code:$('#mcCode').value.trim(),notes:$('#mcNotes').value.trim(),bom:clean};
+       try{ if(m){ await db.collection(C.machines).doc(m.id).update(data); writeLog('Edited machine',name); }
+         else{ data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.machines).add(data); writeLog('Added machine',name); }
+         closeModal(); toast('Saved','good'); }
+       catch(e){ busy(btn,false); $('#mcErr').textContent='Could not save.'; }
+     }}]);
+  function readBom(){ bom = Array.from(document.querySelectorAll('#bomList .bomrow')).map(r=>({itemId:r.querySelector('select').value, qty:Number(r.querySelector('input').value)||0})); }
+  function drawBom(){
+    const list=$('#bomList'); list.innerHTML='';
+    if(!bom.length) bom=[{itemId:S.items[0].id,qty:1}];
+    bom.forEach((r,idx)=>{
+      const wrap=el(`<div style="margin-bottom:9px"></div>`);
+      const row=el(`<div class="bomrow"><select>${itemOpts(r.itemId)}</select><input type="number" min="0" step="any" value="${r.qty||''}" placeholder="qty"><button type="button" class="x">×</button></div>`);
+      const hint=el(`<div class="t2" style="margin:3px 0 0 2px"></div>`);
+      const sel=row.querySelector('select');
+      const updHint=()=>{ const it=S.items.find(x=>x.id===sel.value); const have=it?itemTotal(it.id):0;
+        hint.innerHTML=`In stock now: <b>${fmtNum(have)}</b> ${esc(it?it.unit||'':'')}`; };
+      sel.onchange=updHint; updHint();
+      row.querySelector('.x').onclick=()=>{ readBom(); bom.splice(idx,1); drawBom(); };
+      wrap.appendChild(row); wrap.appendChild(hint); list.appendChild(wrap);
+    });
+  }
+  drawBom();
+  $('#bomAdd').onclick=()=>{ readBom(); bom.push({itemId:S.items[0].id,qty:1}); drawBom(); };
+}
+function deleteMachine(m){
+  confirmModal('Delete machine?',`Delete "${esc(m.name)}"? Existing builds keep their own copy of the parts list.`,async(btn)=>{ busy(btn,true);
+    try{ await db.collection(C.machines).doc(m.id).delete(); writeLog('Deleted machine',m.name); closeModal(); toast('Deleted'); }
+    catch(e){ busy(btn,false); toast('Failed','bad'); }
+  },'Delete','bad');
+}
+
+/* ===================================================================== */
+/*  BUILDS  (machine build workflow)                                     */
+/* ===================================================================== */
+const BUILD_STATUS={
+  requested:{label:'Requested',pill:'pending'},
+  pending_approval:{label:'Awaiting approval',pill:'pending'},
+  approved:{label:'Approved',pill:'approved2'},
+  rejected:{label:'Rejected',pill:'rejected'},
+  issued:{label:'Material issued',pill:'issued'},
+  completed:{label:'Completed',pill:'completed'},
+};
+function buildStatusPill(b){ const s=BUILD_STATUS[b.status]||{label:b.status,pill:'pending'}; return `<span class="pill ${s.pill}">${s.label}</span>`; }
+function buildRow(b){
+  const row=el(`<div class="row"><div class="grow" style="cursor:pointer">
+    <div class="t1">${esc(b.machineName)}${b.qty>1?' ×'+b.qty:''} ${buildStatusPill(b)}</div>
+    <div class="t2">by ${esc(b.requestedByName||'?')} · ${fmtDate(b.createdAt)}${b.warehouseId?' · '+esc(whName(b.warehouseId)):''}</div>
+  </div></div>`);
+  row.querySelector('.grow').onclick=()=>openBuildDetail(b);
+  return row;
+}
+function viewBuilds(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Builds</h2>
+    <div class="sub">Request a machine to be built and track it through approval, material issue and completion.</div>
+    <div class="spacer"></div><button class="btn primary" id="newBuild">+ New build</button></div>`));
+  v.appendChild(el(`<div class="guide"><b>How it works:</b> Request a machine → warehouse manager reviews → manager approves → warehouse issues material (stock drops automatically) → requester collects & adds serial numbers → accountant is notified the machine is ready.</div>`));
+
+  const active=S.builds.filter(b=>b.status&&!['completed','rejected'].includes(b.status));
+  const history=S.builds.filter(b=>['completed','rejected'].includes(b.status)).slice(0,60);
+
+  const a=el(`<div class="card"><div class="ch">In progress ${active.length?`<span class="pill pending">${active.length}</span>`:''}</div><div class="cb" id="ab"></div></div>`);
+  v.appendChild(a); const ab=a.querySelector('#ab');
+  if(!active.length) ab.innerHTML='<div class="empty"><div class="big">🛠️</div>No builds yet. Tap “New build” to start one.</div>';
+  else active.forEach(b=>ab.appendChild(buildRow(b)));
+
+  const h=el(`<div class="card"><div class="ch">History</div><div class="cb" id="hb"></div></div>`);
+  v.appendChild(h); const hb=h.querySelector('#hb');
+  if(!history.length) hb.innerHTML='<div class="empty">Nothing completed yet.</div>';
+  else history.forEach(b=>hb.appendChild(buildRow(b)));
+
+  v.querySelector('#newBuild').onclick=()=>openBuildModal();
+}
+function openBuildModal(preMac){
+  if(!S.machines.length){
+    if(can.manageMachines()) confirmModal('No machines yet','Set up a machine with its parts list first. Open the Machines section now?',()=>{closeModal();go('machines');},'Open Machines','primary');
+    else toast('No machines set up yet — ask an admin','bad');
+    return;
+  }
+  if(!S.warehouses.length){ toast('Add a warehouse first','bad'); return; }
+  const mOpts=S.machines.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  const wOpts=S.warehouses.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  modal('New build request',`
+    <label class="fl">Machine to build *</label><select id="bMac">${mOpts}</select>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">Quantity *</label><input id="bQty" type="number" min="1" step="1" value="1"></div>
+      <div style="flex:2"><label class="fl">Issue material from *</label><select id="bWh">${wOpts}</select></div>
+    </div>
+    <label class="fl">Note <span class="hint">why / for whom</span></label><input id="bNote" placeholder="optional">
+    <div class="subsec">Materials needed</div>
+    <div id="bMat"></div>
+    <div class="field-err" id="bErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:'Send request',cls:'primary',onClick:async(btn)=>{
+       const m=S.machines.find(x=>x.id===$('#bMac').value); const qty=Math.max(1,Math.floor(Number($('#bQty').value)||1));
+       if(!m){ $('#bErr').textContent='Pick a machine.'; return; }
+       busy(btn,true);
+       try{ await db.collection(C.builds).add({machineId:m.id,machineName:m.name,bom:m.bom||[],qty,
+         warehouseId:$('#bWh').value,note:$('#bNote').value.trim(),status:'requested',
+         requestedByName:S.me.name,requestedByEmail:S.me.email,createdAt:FieldValue.serverTimestamp()});
+         writeLog('Raised build request',m.name+' ×'+qty);
+         S.people.filter(p=>RANK[p.role]>=RANK.supervisor&&p.whatsapp&&p.active!==false).forEach(p=>sendWhatsApp(p.whatsapp,`New build request: "${m.name}" ×${qty} by ${S.me.name}. Please review.`));
+         closeModal(); toast('Build requested','good');
+       }catch(e){ busy(btn,false); $('#bErr').textContent='Could not send.'; }
+     }}]);
+  const upd=()=>{ const m=S.machines.find(x=>x.id===$('#bMac').value); const wh=$('#bWh').value; const qty=Math.max(1,Math.floor(Number($('#bQty').value)||1));
+    const box=$('#bMat'); if(!m||!m.bom||!m.bom.length){ box.innerHTML='<div class="muted" style="font-size:13px">This machine has no parts list yet.</div>'; return; }
+    box.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Product</th><th class="num">Need</th><th class="num">In stock</th></tr></thead><tbody>${m.bom.map(x=>{const need=(Number(x.qty)||0)*qty;const have=stockQty(x.itemId,wh);return `<tr><td>${esc(itemName(x.itemId))}</td><td class="num">${fmtNum(need)}</td><td class="num">${have<need?`<span class="pill short">${fmtNum(have)}</span>`:fmtNum(have)}</td></tr>`;}).join('')}</tbody></table></div>`;
+  };
+  $('#bMac').onchange=upd; $('#bWh').onchange=upd; $('#bQty').oninput=upd;
+  if(preMac && S.machines.some(m=>m.id===preMac)) $('#bMac').value=preMac;
+  upd();
+}
+function buildStepperHTML(b){
+  const rejected=b.status==='rejected';
+  const order=['requested','pending_approval','approved','issued','completed'];
+  const cur = rejected? 2 : order.indexOf(b.status);
+  const steps=[
+    {t:'Requested', m:`by ${esc(b.requestedByName||'?')} · ${fmtDate(b.createdAt)}`},
+    {t:'Reviewed & sent for approval', m:b.reviewedByName?`by ${esc(b.reviewedByName)} · ${fmtDate(b.reviewedAt)}`:'Warehouse manager reviews the request'},
+    {t: rejected?'Rejected by manager':'Manager approval', m: rejected?`by ${esc(b.decidedByName||'')}`:(b.decidedByName?`Approved by ${esc(b.decidedByName)} · ${fmtDate(b.decidedAt)}`:'Manager approves the build')},
+    {t:'Material issued', m:b.issuedByName?`by ${esc(b.issuedByName)} · ${fmtDate(b.issuedAt)}${b.shortages?' · ⚠ shortages':''}`:'Warehouse manager issues parts; stock reduces'},
+    {t:'Serial numbers & ready', m:b.completedByName?`Accountant notified · ${esc(b.completedByName)} · ${fmtDate(b.completedAt)}`:(b.serials?'Serials added — mark ready to notify accountant':'Requester adds serials, then mark ready')},
+  ];
+  return '<div class="stepper">'+steps.map((s,i)=>{
+    let cls;
+    if(b.status==='completed') cls='done';
+    else if(rejected) cls = i<2?'done':(i===2?'current':'pending');
+    else cls = i<cur?'done':(i===cur?'current':'pending');
+    const dot = cls==='done'?'✓':(i+1);
+    return `<div class="step ${cls}"><div class="dot">${dot}</div><div style="flex:1"><div class="stt">${s.t}</div><div class="smeta">${s.m}</div></div></div>`;
+  }).join('')+'</div>';
+}
+function openBuildDetail(b){
+  const matRows=(b.bom||[]).map(x=>{
+    const need=(Number(x.qty)||0)*(Number(b.qty)||1);
+    if(b.issued){ const r=(b.issued.find(z=>z.itemId===x.itemId))||{issued:0,short:need};
+      return `<tr><td>${esc(itemName(x.itemId))}</td><td class="num">${fmtNum(need)}</td><td class="num">${fmtNum(r.issued)}</td><td class="num">${r.short>0?`<span class="pill short">−${fmtNum(r.short)}</span>`:'✓'}</td></tr>`; }
+    const have=stockQty(x.itemId,b.warehouseId);
+    return `<tr><td>${esc(itemName(x.itemId))}</td><td class="num">${fmtNum(need)}</td><td class="num">${fmtNum(have)}</td><td class="num">${have<need?'<span class="pill short">short</span>':'✓'}</td></tr>`;
+  }).join('');
+  const matTable=(b.bom&&b.bom.length)
+    ? `<div class="subsec">Materials (parts list × ${b.qty})</div><div class="tablewrap"><table><thead><tr><th>Product</th><th class="num">Needed</th><th class="num">${b.issued?'Issued':'In stock'}</th><th class="num"></th></tr></thead><tbody>${matRows}</tbody></table></div>`
+    : '<div class="muted" style="font-size:13px">No parts list on this machine.</div>';
+  const serialsHTML=b.serials?`<div class="subsec">Serial numbers</div><div class="t2" style="white-space:pre-wrap">${esc((b.serials.machine||'')+(b.serials.components?'\n'+b.serials.components:''))}</div>`:'';
+
+  const back=modal('Build: '+b.machineName,`
+    <div style="margin-bottom:8px">${buildStatusPill(b)} <span class="muted" style="font-size:13px">· issue from ${esc(whName(b.warehouseId))}</span></div>
+    ${b.note?`<div class="t2" style="margin-bottom:12px">“${esc(b.note)}”</div>`:''}
+    ${buildStepperHTML(b)}
+    ${matTable}
+    ${serialsHTML}
+    <div id="bActs" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px"></div>`,
+    [{label:'Close',cls:'primary',onClick:closeModal}]);
+  const acts=back.querySelector('#bActs');
+  const add=(label,cls,fn)=>{ const x=el(`<button class="btn ${cls}">${label}</button>`); x.onclick=()=>fn(x); acts.appendChild(x); };
+  if(b.status==='requested' && can.reviewBuild()) add('Review & send for approval','primary',()=>reviewBuild(b));
+  else if(b.status==='pending_approval' && can.approveBuild()){ add('Approve','good',()=>decideBuild(b,true)); add('Reject','bad',()=>decideBuild(b,false)); }
+  else if(b.status==='approved' && can.issueBuild()) add('Issue material','primary',(x)=>{ busy(x,true); issueBuild(b).then(()=>{closeModal();toast('Material issued','good');}).catch(e=>{busy(x,false);toast(e.message||'Could not issue','bad');}); });
+  else if(b.status==='issued'){
+    if(b.requestedByEmail===S.me.email || can.issueBuild()) add(b.serials?'Edit serial numbers':'Add serial numbers','ghost',()=>addSerialsModal(b));
+    if(can.completeBuild()) add('Mark ready (notify accountant)','good',()=>completeBuild(b));
+  }
+  if(!acts.children.length) acts.innerHTML='<div class="muted" style="font-size:13px">Nothing for you to do at this stage.</div>';
+}
+async function reviewBuild(b){
+  try{ await db.collection(C.builds).doc(b.id).update({status:'pending_approval',reviewedByName:S.me.name,reviewedByEmail:S.me.email,reviewedAt:FieldValue.serverTimestamp()});
+    writeLog('Build sent for approval',b.machineName);
+    S.people.filter(p=>RANK[p.role]>=RANK.admin&&p.whatsapp&&p.active!==false).forEach(p=>sendWhatsApp(p.whatsapp,`Build approval needed: "${b.machineName}" ×${b.qty} requested by ${b.requestedByName}.`));
+    closeModal(); toast('Sent for approval','good');
+  }catch(e){ toast('Failed','bad'); }
+}
+function decideBuild(b,approve){
+  if(!approve){
+    confirmModal('Reject build?',`Reject the build of "${esc(b.machineName)}"?`,async(btn)=>{ busy(btn,true);
+      try{ await db.collection(C.builds).doc(b.id).update({status:'rejected',decision:'rejected',decidedByName:S.me.name,decidedAt:FieldValue.serverTimestamp()});
+        writeLog('Build rejected',b.machineName);
+        const r=S.people.find(p=>p.email===b.requestedByEmail); if(r&&r.whatsapp) sendWhatsApp(r.whatsapp,`Your build "${b.machineName}" was not approved.`);
+        closeModal(); toast('Rejected'); }catch(e){ busy(btn,false); toast('Failed','bad'); }
+    },'Reject','bad'); return;
+  }
+  confirmModal('Approve build?',`Approve the build of "${esc(b.machineName)}"? Material can then be issued.`,async(btn)=>{ busy(btn,true);
+    try{ await db.collection(C.builds).doc(b.id).update({status:'approved',decision:'approved',decidedByName:S.me.name,decidedAt:FieldValue.serverTimestamp()});
+      writeLog('Build approved',b.machineName);
+      const r=S.people.find(p=>p.email===b.requestedByEmail); if(r&&r.whatsapp) sendWhatsApp(r.whatsapp,`Your build "${b.machineName}" is approved. Material will be issued.`);
+      closeModal(); toast('Approved','good'); }catch(e){ busy(btn,false); toast('Failed','bad'); }
+  },'Approve','good');
+}
+// Deduct {itemId,need}[] from a warehouse, pulling across its areas (Main first). Reads-before-writes safe.
+async function consumeItemsTx(tx, items, whId){
+  const areas=whAreas(whId).map(a=>a.id);
+  const plans=items.map(it=>({ itemId:it.itemId, need:it.need,
+    slots:areas.map(aid=>({aid,ref:db.collection(C.stock).doc(stockKey(it.itemId,whId,aid))})),
+    legRef:db.collection(C.stock).doc(legacyKey(it.itemId,whId)) }));
+  for(const p of plans){
+    for(const s of p.slots){ const snap=await tx.get(s.ref); s.qty=snap.exists?Number(snap.data().quantity)||0:0; }
+    const lsnap=await tx.get(p.legRef); p.legQty=lsnap.exists?Number(lsnap.data().quantity)||0:0;
+  }
+  const result=[];
+  for(const p of plans){
+    if(p.legQty>0){ let m=p.slots.find(s=>s.aid==='main'); if(!m){ m={aid:'main',ref:db.collection(C.stock).doc(stockKey(p.itemId,whId,'main')),qty:0}; p.slots.unshift(m); } m.qty+=p.legQty; }
+    p.slots.sort((a,b)=> a.aid==='main'?-1 : b.aid==='main'?1 : 0);
+    let remaining=p.need;
+    for(const s of p.slots){ if(remaining<=0) break; const take=Math.min(s.qty,remaining); if(take>0){ tx.set(s.ref,{itemId:p.itemId,warehouseId:whId,areaId:s.aid,quantity:s.qty-take},{merge:true}); remaining-=take; } }
+    if(p.legQty>0) tx.delete(p.legRef);
+    result.push({itemId:p.itemId, need:p.need, issued:p.need-remaining, short:Math.max(0,remaining)});
+  }
+  return result;
+}
+async function issueBuild(b){
+  const needs=(b.bom||[]).map(x=>({itemId:x.itemId, need:(Number(x.qty)||0)*(Number(b.qty)||1)})).filter(n=>n.need>0);
+  if(!needs.length) throw new Error('This machine has no parts list.');
+  let result=[];
+  await db.runTransaction(async tx=>{ result=await consumeItemsTx(tx,needs,b.warehouseId); });
+  for(const r of result){ if(r.issued>0){ await db.collection(C.movements).add({type:'out',itemId:r.itemId,warehouseId:b.warehouseId,quantity:r.issued,note:'Build: '+b.machineName,byName:S.me.name,byEmail:S.me.email,viaBuild:b.id,createdAt:FieldValue.serverTimestamp()}); } }
+  const shortages=result.some(r=>r.short>0);
+  const clean=result.map(r=>({itemId:r.itemId,need:r.need,issued:r.issued,short:r.short}));
+  await db.collection(C.builds).doc(b.id).update({status:'issued',issued:clean,shortages,issuedByName:S.me.name,issuedAt:FieldValue.serverTimestamp()});
+  writeLog('Issued material for build',b.machineName+(shortages?' (with shortages)':''));
+  const reqP=S.people.find(p=>p.email===b.requestedByEmail); if(reqP&&reqP.whatsapp) sendWhatsApp(reqP.whatsapp,`Material for "${b.machineName}" is issued. Please collect it.`);
+  if(shortages){ writeLog('Purchase alert: shortage on build',b.machineName);
+    S.people.filter(p=>RANK[p.role]>=RANK.admin&&p.whatsapp).forEach(p=>sendWhatsApp(p.whatsapp,`Stock short while issuing build "${b.machineName}". Purchase needed.`)); }
+}
+function addSerialsModal(b){
+  const s=b.serials||{};
+  modal('Serial numbers — '+b.machineName,`
+    <label class="fl">Machine serial number(s) <span class="hint">one per line if more than one</span></label>
+    <textarea id="sMac" style="min-height:70px">${esc(s.machine||'')}</textarea>
+    <label class="fl">Product / component serials & details <span class="hint">optional</span></label>
+    <textarea id="sComp" style="min-height:80px">${esc(s.components||'')}</textarea>
+    <div class="field-err" id="sErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},{label:'Save',cls:'primary',onClick:async(btn)=>{
+      busy(btn,true);
+      try{ await db.collection(C.builds).doc(b.id).update({serials:{machine:$('#sMac').value.trim(),components:$('#sComp').value.trim()},serialByName:S.me.name,serialAt:FieldValue.serverTimestamp()});
+        writeLog('Added serial numbers',b.machineName); closeModal(); toast('Saved','good'); }
+      catch(e){ busy(btn,false); $('#sErr').textContent='Could not save.'; }
+    }}]);
+}
+function completeBuild(b){
+  confirmModal('Mark ready?',`Mark "${esc(b.machineName)}" ready and notify the accountant?`,async(btn)=>{ busy(btn,true);
+    try{ await db.collection(C.builds).doc(b.id).update({status:'completed',completedByName:S.me.name,completedAt:FieldValue.serverTimestamp()});
+      writeLog('Build completed — accountant notified',b.machineName);
+      S.people.filter(p=>RANK[p.role]>=RANK.admin&&p.whatsapp).forEach(p=>sendWhatsApp(p.whatsapp,`Machine ready: "${b.machineName}" ×${b.qty}. Serial: ${(b.serials&&b.serials.machine)||'—'}.`));
+      closeModal(); toast('Marked ready','good'); }catch(e){ busy(btn,false); toast('Failed','bad'); }
+  },'Mark ready','good');
+}
+
+/* ===================================================================== */
+/*  8)  CUSTOMERS  +  ALLOCATIONS                                        */
+/* ===================================================================== */
+function customerName(id){ const c=S.customers.find(x=>x.id===id); return c?c.name:'(deleted customer)'; }
+// stock reserved by allocations that are still open (status 'reserved')
+function reservedQty(itemId,whId){ let r=0;
+  S.allocations.forEach(a=>{ if(a.status==='reserved' && a.warehouseId===whId)
+    (a.lines||[]).forEach(l=>{ if(l.itemId===itemId) r+=Number(l.qty)||0; }); });
+  return r; }
+function availableQty(itemId,whId){ return Math.max(0, stockQty(itemId,whId)-reservedQty(itemId,whId)); }
+function allocRecipient(a){
+  if(a.recipientType==='customer') return a.customerName||'(customer)';
+  if(a.recipientType==='person')   return a.personName||'(staff)';
+  return a.recipientName||'Walk-in';
+}
+function allocRecipientKind(a){
+  return a.recipientType==='customer'?'Customer':a.recipientType==='person'?'Staff':'Walk-in';
+}
+function allocStatusPill(a){
+  if(a.status==='delivered') return `<span class="pill completed">Delivered${a.shortages?' (short)':''}</span>`;
+  if(a.status==='cancelled') return '<span class="pill role">Cancelled</span>';
+  return '<span class="pill pending">Reserved</span>';
+}
+
+// ---------- Customers ----------
+function viewCustomers(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Customers</h2><div class="spacer"></div>
+    <input id="custSearch" placeholder="Search…" style="max-width:220px">
+    ${can.manageCustomers()?'<button class="btn primary" id="addCust">+ Add customer</button>':''}</div>`));
+  v.appendChild(el(`<div class="guide">Your customer list. Tap a customer to see everything they've received. When you <b>allocate</b> products you can pick a customer here — but a customer is optional (you can also deliver to a staff member or a walk-in).</div>`));
+  const card=el(`<div class="card"><div class="cb" id="cb"></div></div>`); v.appendChild(card);
+  const render=(q)=>{
+    const cb=card.querySelector('#cb'); cb.innerHTML='';
+    const list=S.customers.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.company||'').toLowerCase().includes(q));
+    if(!list.length){ cb.innerHTML='<div class="empty"><div class="big">🧑‍💼</div>No customers yet.'+(can.manageCustomers()?' Add your first one.':'')+'</div>'; return; }
+    list.forEach(c=>{
+      const bits=[]; if(c.company) bits.push(esc(c.company)); if(c.phone) bits.push(esc(c.phone)); if(c.gstin) bits.push('GST '+esc(c.gstin));
+      const received=S.allocations.filter(a=>a.customerId===c.id && a.status!=='cancelled').length;
+      const row=el(`<div class="row"><div class="grow" style="cursor:pointer">
+        <div class="t1">${esc(c.name)}${c.active===false?' <span class="pill role">inactive</span>':''}</div>
+        <div class="t2">${bits.join(' · ')||'No contact details'}${received?` · ${received} allocation${received>1?'s':''}`:''}</div>
+      </div><div class="acts"></div></div>`);
+      row.querySelector('.grow').onclick=()=>openCustomerDetail(c);
+      if(can.manageCustomers()){
+        const e=el('<button class="btn ghost sm">Edit</button>');
+        const d=el('<button class="btn bad sm" style="margin-left:6px">Delete</button>');
+        e.onclick=()=>openCustomerModal(c); d.onclick=()=>deleteCustomer(c);
+        row.querySelector('.acts').append(e,d);
+      }
+      cb.appendChild(row);
+    });
+  };
+  render('');
+  v.querySelector('#custSearch').addEventListener('input',e=>render(e.target.value.toLowerCase()));
+  v.querySelector('#addCust')?.addEventListener('click',()=>openCustomerModal());
+}
+function openCustomerModal(c){
+  modal(c?'Edit customer':'Add customer',`
+    <div class="fsec">Customer</div>
+    <label class="fl">Name *</label><input id="cName" value="${esc(c?.name||'')}" placeholder="Person or business name">
+    <label class="fl">Company <span class="hint">optional</span></label><input id="cCompany" value="${esc(c?.company||'')}">
+    <div class="fg2">
+      <div><label class="fl">Phone</label><input id="cPhone" value="${esc(c?.phone||'')}" placeholder="WhatsApp number"></div>
+      <div><label class="fl">GSTIN</label><input id="cGst" value="${esc(c?.gstin||'')}"></div>
+    </div>
+    <label class="fl">Email</label><input id="cEmail" type="email" value="${esc(c?.email||'')}">
+    <label class="fl">Address</label><textarea id="cAddr">${esc(c?.address||'')}</textarea>
+    <label class="fl">Notes</label><textarea id="cNotes">${esc(c?.notes||'')}</textarea>
+    <label class="fl" style="display:flex;align-items:center;gap:8px;margin-top:14px"><input type="checkbox" id="cActive" ${c?.active===false?'':'checked'} style="width:auto"> Active customer</label>
+    <div class="field-err" id="cErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:c?'Save':'Add',cls:'primary',onClick:async(btn)=>{
+        const name=$('#cName').value.trim();
+        if(!name){ $('#cErr').textContent='Name is required.'; return; }
+        busy(btn,true);
+        const data={name,company:$('#cCompany').value.trim(),phone:$('#cPhone').value.trim(),
+          gstin:$('#cGst').value.trim(),email:$('#cEmail').value.trim(),address:$('#cAddr').value.trim(),
+          notes:$('#cNotes').value.trim(),active:$('#cActive').checked};
+        try{
+          if(c){ await db.collection(C.customers).doc(c.id).update(data); writeLog('Edited customer',name); }
+          else { data.createdAt=FieldValue.serverTimestamp(); await db.collection(C.customers).add(data); writeLog('Added customer',name); }
+          closeModal(); toast('Saved','good');
+        }catch(e){ busy(btn,false); $('#cErr').textContent='Could not save. '+(e.message||''); }
+     }}]);
+}
+function deleteCustomer(c){
+  confirmModal('Delete customer?',`Delete "${esc(c.name)}"? Their past allocations stay in the records.`,async(btn)=>{ busy(btn,true);
+    try{ await db.collection(C.customers).doc(c.id).delete(); writeLog('Deleted customer',c.name); closeModal(); toast('Deleted'); }
+    catch(e){ busy(btn,false); toast('Failed','bad'); }
+  },'Delete','bad');
+}
+function openCustomerDetail(c){
+  const hist=S.allocations.filter(a=>a.customerId===c.id);
+  const dr=(k,val)=> val? `<div><div class="dk">${k}</div><div class="dv">${val}</div></div>`:'';
+  const info=`<div class="detail-grid">
+    ${dr('Company',esc(c.company||''))}${dr('Phone',esc(c.phone||''))}
+    ${dr('Email',esc(c.email||''))}${dr('GSTIN',esc(c.gstin||''))}
+    ${dr('Status',c.active===false?'Inactive':'Active')}
+  </div>
+  ${c.address?`<div class="subsec">Address</div><div class="t2" style="white-space:pre-wrap">${esc(c.address)}</div>`:''}
+  ${c.notes?`<div class="subsec">Notes</div><div class="t2" style="white-space:pre-wrap">${esc(c.notes)}</div>`:''}
+  <div class="subsec">Allocation history</div>`;
+  const back=modal(c.name, info+'<div id="custHist"></div>',[{label:'Close',cls:'primary',onClick:closeModal}]);
+  const hb=back.querySelector('#custHist');
+  if(!hist.length){ hb.innerHTML='<div class="muted" style="font-size:13px">Nothing allocated to this customer yet.</div>'; }
+  else hist.forEach(a=>{ const r=allocRow(a,true); hb.appendChild(r); });
+}
+
+// ---------- Allocations ----------
+function viewAllocations(v){
+  v.innerHTML='';
+  v.appendChild(el(`<div class="viewhead"><h2>Allocations</h2><div class="spacer"></div>
+    ${can.allocate()?'<button class="btn primary" id="newAlloc">+ New allocation</button>':''}</div>`));
+  v.appendChild(el(`<div class="guide">Give one or many products to a customer, a staff member or a walk-in. Choose <b>Deliver now</b> to take stock out immediately, or <b>Reserve</b> to hold it and deliver later. Reserved stock is kept aside so it can't be promised twice.</div>`));
+
+  const reserved=S.allocations.filter(a=>a.status==='reserved');
+  const seg=el(`<div class="seg" id="allocSeg">
+    <button class="on" data-s="">All (${S.allocations.length})</button>
+    <button data-s="reserved">To deliver (${reserved.length})</button>
+    <button data-s="delivered">Delivered</button>
+  </div>`);
+  v.appendChild(seg);
+  const card=el(`<div class="card"><div class="cb" id="ab"></div></div>`); v.appendChild(card);
+  let f='';
+  const render=()=>{
+    const ab=card.querySelector('#ab'); ab.innerHTML='';
+    const list=S.allocations.filter(a=>!f|| (f==='delivered'? a.status==='delivered' : a.status===f));
+    if(!list.length){ ab.innerHTML='<div class="empty"><div class="big">🚚</div>Nothing here yet.</div>'; return; }
+    list.forEach(a=>ab.appendChild(allocRow(a)));
+  };
+  render();
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{ f=b.dataset.s; seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  v.querySelector('#newAlloc')?.addEventListener('click',()=>openAllocationModal());
+}
+function allocRow(a,compact){
+  const n=(a.lines||[]).length;
+  const row=el(`<div class="row"><div class="grow" style="cursor:pointer">
+    <div class="t1">${allocStatusPill(a)} ${esc(allocRecipient(a))} <span class="muted" style="font-weight:600;font-size:12px">· ${allocRecipientKind(a)}</span></div>
+    <div class="t2">${n} product${n>1?'s':''} · from ${esc(whName(a.warehouseId))} · ${fmtDate(a.createdAt)}${a.createdByName?' · by '+esc(a.createdByName):''}</div>
+  </div><div class="acts"></div></div>`);
+  row.querySelector('.grow').onclick=()=>openAllocationDetail(a);
+  return row;
+}
+function openAllocationModal(){
+  if(!S.items.length){ toast('Add a product first','bad'); return; }
+  if(!S.warehouses.length){ toast('Add a warehouse first','bad'); return; }
+  let lines=[{itemId:S.items[0].id,qty:1}];
+  const custOpts=S.customers.filter(c=>c.active!==false).map(c=>`<option value="${c.id}">${esc(c.name)}${c.company?' — '+esc(c.company):''}</option>`).join('');
+  const persOpts=S.people.filter(p=>p.active!==false).map(p=>`<option value="${esc(p.email)}">${esc(p.name||p.email)}</option>`).join('');
+  const whOpts=S.warehouses.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  const itemOpt=sel=>S.items.map(i=>`<option value="${i.id}" ${i.id===sel?'selected':''}>${esc(i.name)}${i.unit?' ('+esc(i.unit)+')':''}</option>`).join('');
+
+  modal('New allocation',`
+    <div class="fsec">Who is receiving</div>
+    <label class="fl">Recipient type *</label>
+    <select id="aType">
+      <option value="customer">A customer</option>
+      <option value="person">A staff member</option>
+      <option value="walkin">Walk-in / other (just a name)</option>
+    </select>
+    <div id="aRecipBox"></div>
+
+    <div class="fsec">From where</div>
+    <label class="fl">Warehouse *</label><select id="aWh">${whOpts}</select>
+
+    <div class="fsec">Products</div>
+    <div id="aLines"></div>
+    <button type="button" class="btn ghost sm" id="aAddLine" style="margin-top:8px">+ Add another product</button>
+
+    <div class="fsec">What to do now</div>
+    <label class="fl">Action *</label>
+    <select id="aMode">
+      <option value="deliver">Deliver now — take it out of stock</option>
+      <option value="reserve">Reserve — hold it, deliver later</option>
+    </select>
+    <label class="fl">Note <span class="hint">optional</span></label><input id="aNote" placeholder="reference, vehicle, remarks…">
+    <div class="field-err" id="aErr"></div>`,
+    [{label:'Cancel',onClick:closeModal},
+     {label:'Save',cls:'primary',onClick:saveAlloc}]);
+
+  const recipBox=$('#aRecipBox');
+  const drawRecip=()=>{
+    const t=$('#aType').value;
+    if(t==='customer'){ recipBox.innerHTML = custOpts
+        ? `<label class="fl">Customer *</label><select id="aCust">${custOpts}</select>`
+        : `<div class="guide" style="margin:8px 0 0">No active customers yet. Add one in the <b>Customers</b> tab, or choose Walk-in.</div>`; }
+    else if(t==='person'){ recipBox.innerHTML = persOpts
+        ? `<label class="fl">Staff member *</label><select id="aPers">${persOpts}</select>`
+        : `<div class="guide" style="margin:8px 0 0">No staff added yet.</div>`; }
+    else { recipBox.innerHTML = `<label class="fl">Name *</label><input id="aWalk" placeholder="e.g. Counter sale, contractor name">`; }
+  };
+  drawRecip();
+  $('#aType').onchange=drawRecip;
+
+  const drawLines=()=>{
+    const wh=$('#aWh').value; const box=$('#aLines');
+    box.innerHTML = lines.map((ln,idx)=>{
+      const avail=availableQty(ln.itemId,wh);
+      const need=Number(ln.qty)||0;
+      const warn = need>avail ? `<span class="pill short" title="available now">${fmtNum(avail)} avail</span>` : `<span class="muted" style="font-size:12px">${fmtNum(avail)} avail</span>`;
+      return `<div class="bomrow">
+        <select data-i="${idx}" class="aItem">${itemOpt(ln.itemId)}</select>
+        <input data-i="${idx}" class="aQty" type="number" min="1" step="any" value="${need}">
+        <button type="button" class="x" data-i="${idx}">×</button>
+      </div><div style="margin:-2px 0 9px 2px">${warn}</div>`;
+    }).join('');
+    box.querySelectorAll('.aItem').forEach(s=>s.onchange=e=>{ lines[+e.target.dataset.i].itemId=e.target.value; drawLines(); });
+    box.querySelectorAll('.aQty').forEach(s=>s.oninput=e=>{ lines[+e.target.dataset.i].qty=e.target.value; drawLines(); });
+    box.querySelectorAll('.x').forEach(b=>b.onclick=e=>{ if(lines.length>1){ lines.splice(+e.target.dataset.i,1); drawLines(); } });
+  };
+  drawLines();
+  $('#aWh').onchange=drawLines;
+  $('#aAddLine').onclick=()=>{ lines.push({itemId:S.items[0].id,qty:1}); drawLines(); };
+
+  async function saveAlloc(btn){
+    const type=$('#aType').value, wh=$('#aWh').value, mode=$('#aMode').value;
+    const clean=lines.map(l=>({itemId:l.itemId,qty:Math.max(0,Number(l.qty)||0)})).filter(l=>l.itemId&&l.qty>0);
+    if(!clean.length){ $('#aErr').textContent='Add at least one product with a quantity.'; return; }
+    const data={recipientType:type,warehouseId:wh,lines:clean,mode,note:$('#aNote').value.trim()};
+    if(type==='customer'){ const id=$('#aCust')?.value; if(!id){ $('#aErr').textContent='Pick a customer (or choose Walk-in).'; return; }
+      data.customerId=id; data.customerName=customerName(id); }
+    else if(type==='person'){ const em=$('#aPers')?.value; if(!em){ $('#aErr').textContent='Pick a staff member.'; return; }
+      const p=S.people.find(x=>x.email===em); data.personEmail=em; data.personName=p?(p.name||p.email):em; }
+    else { const nm=$('#aWalk')?.value.trim(); if(!nm){ $('#aErr').textContent='Enter a name for the recipient.'; return; }
+      data.recipientName=nm; }
+    // for reserve, make sure we don't hold more than is available
+    if(mode==='reserve'){
+      const over=clean.find(l=>l.qty>availableQty(l.itemId,wh));
+      if(over){ $('#aErr').textContent=`Only ${fmtNum(availableQty(over.itemId,wh))} ${itemUnit(over.itemId)} of ${itemName(over.itemId)} available to reserve.`; return; }
+    }
+    busy(btn,true);
+    try{
+      const ref=await db.collection(C.allocations).add({...data,status:'reserved',
+        createdByName:S.me.name,createdByEmail:S.me.email,createdAt:FieldValue.serverTimestamp()});
+      writeLog('Created allocation',allocRecipient({...data})+` · ${clean.length} item(s)`);
+      if(mode==='deliver'){ await deliverAllocation({id:ref.id,...data,status:'reserved'}); }
+      closeModal(); toast(mode==='deliver'?'Delivered':'Reserved','good');
+    }catch(e){ busy(btn,false); $('#aErr').textContent='Could not save. '+(e.message||''); }
+  }
+}
+function openAllocationDetail(a){
+  const delivered=a.status==='delivered';
+  const lineRows=(a.lines||[]).map(l=>{
+    if(delivered && a.delivered){ const r=a.delivered.find(z=>z.itemId===l.itemId)||{issued:0,short:Number(l.qty)||0};
+      return `<tr><td>${esc(itemName(l.itemId))}</td><td class="num">${fmtNum(l.qty)}</td><td class="num">${fmtNum(r.issued)}</td><td class="num">${r.short>0?`<span class="pill short">−${fmtNum(r.short)}</span>`:'✓'}</td></tr>`; }
+    const avail=availableQty(l.itemId,a.warehouseId);
+    return `<tr><td>${esc(itemName(l.itemId))}</td><td class="num">${fmtNum(l.qty)}</td><td class="num">${fmtNum(avail)}</td><td class="num">${avail<Number(l.qty)?'<span class="pill short">short</span>':'✓'}</td></tr>`;
+  }).join('');
+  const table=`<div class="tablewrap"><table><thead><tr><th>Product</th><th class="num">Qty</th><th class="num">${delivered?'Given':'Available'}</th><th class="num"></th></tr></thead><tbody>${lineRows}</tbody></table></div>`;
+  const back=modal('Allocation — '+allocRecipient(a),`
+    <div style="margin-bottom:8px">${allocStatusPill(a)} <span class="muted" style="font-size:13px">· ${allocRecipientKind(a)} · from ${esc(whName(a.warehouseId))}</span></div>
+    ${a.note?`<div class="t2" style="margin-bottom:12px">“${esc(a.note)}”</div>`:''}
+    <div class="t2" style="margin-bottom:10px">Created by ${esc(a.createdByName||'?')} · ${fmtDate(a.createdAt)}${a.deliveredByName?`<br>Delivered by ${esc(a.deliveredByName)} · ${fmtDate(a.deliveredAt)}`:''}</div>
+    ${table}
+    <div id="aActs" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px"></div>`,
+    [{label:'Close',cls:'primary',onClick:closeModal}]);
+  const acts=back.querySelector('#aActs');
+  const add=(label,cls,fn)=>{ const x=el(`<button class="btn ${cls}">${label}</button>`); x.onclick=()=>fn(x); acts.appendChild(x); };
+  if(a.status==='reserved' && can.allocate()){
+    add('Deliver now','good',(btn)=>{ busy(btn,true);
+      deliverAllocation(a).then(()=>{ closeModal(); toast('Delivered','good'); }).catch(e=>{ busy(btn,false); toast(e.message||'Failed','bad'); }); });
+    add('Cancel allocation','bad',()=>cancelAllocation(a));
+  }
+  if(delivered) add('Print delivery note','ghost',()=>printDeliveryNote(a));
+}
+async function deliverAllocation(a){
+  const needs=(a.lines||[]).map(l=>({itemId:l.itemId,need:Number(l.qty)||0})).filter(n=>n.need>0);
+  if(!needs.length) throw new Error('No products in this allocation.');
+  let result=[];
+  await db.runTransaction(async tx=>{ result=await consumeItemsTx(tx,needs,a.warehouseId); });
+  for(const r of result){ if(r.issued>0){ await db.collection(C.movements).add({type:'out',itemId:r.itemId,warehouseId:a.warehouseId,quantity:r.issued,note:'Allocation: '+allocRecipient(a),byName:S.me.name,byEmail:S.me.email,viaAllocation:a.id,createdAt:FieldValue.serverTimestamp()}); } }
+  const shortages=result.some(r=>r.short>0);
+  const clean=result.map(r=>({itemId:r.itemId,qty:r.need,issued:r.issued,short:r.short}));
+  await db.collection(C.allocations).doc(a.id).update({status:'delivered',delivered:clean,shortages,
+    deliveredByName:S.me.name,deliveredByEmail:S.me.email,deliveredAt:FieldValue.serverTimestamp()});
+  writeLog('Delivered allocation',allocRecipient(a)+(shortages?' (with shortages)':''));
+  if(a.recipientType==='customer'){ const c=S.customers.find(x=>x.id===a.customerId); if(c&&c.phone) sendWhatsApp(c.phone,`Dispatched to ${c.name}: ${clean.length} item(s) from ${companyName()}.`); }
+  if(shortages){ writeLog('Purchase alert: shortage on delivery',allocRecipient(a));
+    S.people.filter(p=>RANK[p.role]>=RANK.admin&&p.whatsapp).forEach(p=>sendWhatsApp(p.whatsapp,`Stock short while delivering to ${allocRecipient(a)}. Purchase needed.`)); }
+}
+function cancelAllocation(a){
+  confirmModal('Cancel allocation?',`Cancel the reserved allocation for "${esc(allocRecipient(a))}"? The reserved stock will be released.`,async(btn)=>{ busy(btn,true);
+    try{ await db.collection(C.allocations).doc(a.id).update({status:'cancelled',cancelledByName:S.me.name,cancelledAt:FieldValue.serverTimestamp()});
+      writeLog('Cancelled allocation',allocRecipient(a)); closeModal(); toast('Cancelled'); }
+    catch(e){ busy(btn,false); toast('Failed','bad'); }
+  },'Cancel allocation','bad');
+}
+function printDeliveryNote(a){
+  const rows=(a.lines||[]).map(l=>{ const giv=a.delivered?(a.delivered.find(z=>z.itemId===l.itemId)||{}).issued??l.qty:l.qty;
+    return `<tr><td>${esc(itemName(l.itemId))}</td><td style="text-align:right">${fmtNum(giv)} ${esc(itemUnit(l.itemId))}</td></tr>`; }).join('');
+  const html=`<html><head><title>Delivery Note</title><style>
+    body{font-family:Arial,sans-serif;color:#1b2230;padding:30px;max-width:680px;margin:auto}
+    h1{font-size:20px;margin:0} .sub{color:#666;font-size:13px;margin:2px 0 18px}
+    table{width:100%;border-collapse:collapse;margin-top:12px} th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left;font-size:14px}
+    th{background:#f4f5f7} .meta{font-size:13px;line-height:1.7;margin-top:6px} .foot{margin-top:40px;font-size:12px;color:#888}
+  </style></head><body>
+    <h1>${esc(companyName())}</h1><div class="sub">Delivery / Allocation Note</div>
+    <div class="meta"><b>To:</b> ${esc(allocRecipient(a))} (${allocRecipientKind(a)})<br>
+    <b>From warehouse:</b> ${esc(whName(a.warehouseId))}<br>
+    <b>Date:</b> ${fmtDate(a.deliveredAt||a.createdAt)}<br>
+    ${a.note?`<b>Note:</b> ${esc(a.note)}<br>`:''}</div>
+    <table><thead><tr><th>Product</th><th style="text-align:right">Quantity</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="foot">Issued by ${esc(a.deliveredByName||a.createdByName||'')} · Generated from Kasera Stock</div>
+  </body></html>`;
+  const w=window.open('','_blank');
+  if(!w){ toast('Allow pop-ups to print','bad'); return; }
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
+}
+
+/* ===================================================================== */
+/*  9)  SUPER-ADMIN SETTINGS  (WhatsApp / 11za, company)                 */
+/* ===================================================================== */
+function companyName(){ return (S.config&&S.config.companyName)||'Kasera Industries'; }
+async function saveConfig(patch){ await db.collection(C.config).doc('settings').set(patch,{merge:true}); }
+function viewSettings(v){
+  v.innerHTML='';
+  if(!can.settings()){ v.appendChild(el('<div class="card"><div class="empty">Settings are for the super admin only.</div></div>')); return; }
+  v.appendChild(el(`<div class="viewhead"><h2>Settings</h2>
+    <div class="sub">Super-admin controls for the whole portal.</div></div>`));
+
+  const cfg=S.config||{};
+  const waOn = !!cfg.whatsappEnabled && !!cfg.whatsappUrl;
+
+  // ---- Company ----
+  const comp=el(`<div class="card">
+    <div class="ch">Company</div>
+    <div class="cb" style="padding:14px 16px">
+      <label class="fl" style="margin-top:0">Company name <span class="hint">shown on delivery notes</span></label>
+      <input id="setCompany" value="${esc(cfg.companyName||'Kasera Industries')}">
+      <button class="btn primary" id="setCompanySave" style="margin-top:12px">Save</button>
+    </div></div>`);
+  v.appendChild(comp);
+  comp.querySelector('#setCompanySave').onclick=async(e)=>{ const btn=e.target; busy(btn,true);
+    try{ await saveConfig({companyName:$('#setCompany').value.trim()||'Kasera Industries'}); toast('Saved','good'); }
+    catch(err){ toast('Could not save — check permissions','bad'); } busy(btn,false); };
+
+  // ---- WhatsApp / 11za ----
+  const KNOWN_WA_URL='https://script.google.com/macros/s/AKfycbwK4wukGnGPnYsJikJnkRkgWfr2YOpd-wQfZS68sSdrQk4skcRGsFGO2ZpPxO4BGTzd/exec';
+  const wa=el(`<div class="card">
+    <div class="ch">WhatsApp notifications (11za)
+      <span class="pill ${waOn?'completed':'role'}" style="margin-left:auto">${waOn?'Connected ✓':'Off'}</span></div>
+    <div class="cb" style="padding:14px 16px">
+      <div class="guide" style="margin-top:0">This sends through the <b>same Apps Script + 11za</b> as your Task app. 11za needs an <b>approved template</b>. The simplest is a one-line template whose body is just <code>{{1}}</code> — the full alert text goes into it. Create that template in 11za, then put its <b>exact name</b> below.</div>
+      <label class="fl">Apps Script Service URL <span class="hint">same /exec URL as the Task app's Technical setting</span></label>
+      <input id="setWaUrl" value="${esc(cfg.whatsappUrl||KNOWN_WA_URL)}" placeholder="https://script.google.com/macros/s/…/exec">
+      <label class="fl">11za template name <span class="hint">e.g. stock_alert (body: {{1}})</span></label>
+      <input id="setWaTpl" value="${esc(cfg.whatsappTemplate||'')}" placeholder="approved template name">
+      <label class="fl" style="display:flex;align-items:center;gap:8px;margin-top:14px">
+        <input type="checkbox" id="setWaOn" ${cfg.whatsappEnabled?'checked':''} style="width:auto"> Send WhatsApp notifications</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn primary" id="setWaSave">Save</button>
+        <button class="btn good" id="setWaTest">Save &amp; send me a test</button>
+      </div>
+      <div class="t2" id="setWaMsg" style="margin-top:10px"></div>
+    </div></div>`);
+  v.appendChild(wa);
+  const saveWa=async()=>{ await saveConfig({whatsappUrl:$('#setWaUrl').value.trim(), whatsappTemplate:$('#setWaTpl').value.trim(), whatsappEnabled:$('#setWaOn').checked}); };
+  wa.querySelector('#setWaSave').onclick=async(e)=>{ const btn=e.target; busy(btn,true);
+    try{ await saveWa(); toast('Saved','good'); $('#setWaMsg').textContent='Saved.'; }
+    catch(err){ toast('Could not save — check permissions','bad'); } busy(btn,false); };
+  wa.querySelector('#setWaTest').onclick=async(e)=>{ const btn=e.target; busy(btn,true);
+    try{ await saveWa();
+      const myNum=(S.people.find(p=>p.email===S.me.email)||{}).whatsapp;
+      if(!myNum){ $('#setWaMsg').innerHTML='Saved. <b>Add a WhatsApp number to your own profile in People</b> to receive a test.'; busy(btn,false); return; }
+      if(!$('#setWaOn').checked){ $('#setWaMsg').textContent='Saved. Tick "Send WhatsApp notifications" first, then test.'; busy(btn,false); return; }
+      if(!$('#setWaTpl').value.trim()){ $('#setWaMsg').textContent='Enter your approved 11za template name first.'; busy(btn,false); return; }
+      await sendWhatsApp(myNum, `Test from ${companyName()} Stock — 11za is connected.`);
+      $('#setWaMsg').innerHTML='Test sent to <b>'+esc(myNum)+'</b>. If it does not arrive, check the template name is approved in 11za.'; }
+    catch(err){ $('#setWaMsg').textContent='Could not send. Check the URL and template.'; } busy(btn,false); };
+
+  // ---- What gets notified ----
+  v.appendChild(el(`<div class="card">
+    <div class="ch">What sends a WhatsApp</div>
+    <div class="cb" style="padding:6px 16px 14px">
+      <ul class="t2" style="margin:8px 0 0;padding-left:18px;line-height:1.9">
+        <li>New build request → supervisors &amp; admins</li>
+        <li>Build approved / material issued → the requester</li>
+        <li>Stock moved in/out of an area → that area's manager</li>
+        <li>Allocation delivered → the customer (if they have a number)</li>
+        <li>Stock shortage on a build or delivery → admins (purchase alert)</li>
+      </ul>
+    </div></div>`));
+
+  // ---- Access panel ----
+  const roles=[['employee','Employee'],['supervisor','Supervisor'],['admin','Admin']];
+  const acc=cfg.access||{};
+  const accCard=el(`<div class="card">
+    <div class="ch">Access — what each role can see</div>
+    <div class="cb" style="padding:14px 16px">
+      <div class="guide" style="margin-top:0">Tick the sections each role may open. Super Admin always sees everything. Admin-only areas (Products, Machines, Warehouses, People, Settings) stay restricted by role and aren't listed here.</div>
+      <div class="tablewrap"><table><thead><tr><th>Section</th>${roles.map(r=>`<th class="num">${r[1]}</th>`).join('')}</tr></thead>
+      <tbody>${ACCESS_SECTIONS.map(s=>`<tr><td>${s.label}</td>${roles.map(r=>{
+        const on = !(acc[r[0]] && acc[r[0]][s.k]===false);
+        return `<td class="num"><input type="checkbox" data-role="${r[0]}" data-sec="${s.k}" ${on?'checked':''} style="width:auto"></td>`;
+      }).join('')}</tr>`).join('')}</tbody></table></div>
+      <button class="btn primary" id="accSave" style="margin-top:14px">Save access</button>
+      <div class="t2" id="accMsg" style="margin-top:8px"></div>
+    </div></div>`);
+  v.appendChild(accCard);
+  accCard.querySelector('#accSave').onclick=async(e)=>{ const btn=e.target; busy(btn,true);
+    const next={};
+    accCard.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      const r=cb.dataset.role, s=cb.dataset.sec; next[r]=next[r]||{}; next[r][s]=cb.checked; });
+    try{ await saveConfig({access:next}); toast('Access saved','good'); $('#accMsg').textContent='Saved. The sidebar updates for each role immediately.'; }
+    catch(err){ toast('Could not save — check permissions','bad'); } busy(btn,false); };
+
+  // ---- Coming next ----
+  v.appendChild(el(`<div class="card">
+    <div class="ch">Coming in the next phases</div>
+    <div class="cb" style="padding:6px 16px 14px">
+      <ul class="t2" style="margin:8px 0 0;padding-left:18px;line-height:1.9">
+        <li>Editable form fields — turn fields on/off and required/optional</li>
+        <li>Language switch (English / Hindi)</li>
+      </ul>
+    </div></div>`));
+}
+
 async function doBackup(){
   toast('Preparing backup…');
   try{
